@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lot Book — Factory Ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1F2933; --ink-soft:#4B5A63; --paper:#F7F4EE; --paper-2:#FFFFFF;
+    --line:#DDD6C7; --line-soft:#EBE6D9;
+    --teal:#2C6E63; --teal-dark:#1E4F47; --teal-tint:#E4EFEC;
+    --gold:#B8862E; --gold-tint:#F6ECD8;
+    --rust:#A6432B; --rust-tint:#F7E7E2;
+    --green:#3F7D4E; --green-tint:#E8F2E9;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(31,41,51,.06), 0 4px 14px rgba(31,41,51,.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;
+    font-size:14px; line-height:1.45;
+    min-height:100vh;
+  }
+  .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  ::selection{background:var(--gold-tint);}
+  a{color:var(--teal-dark);}
+
+  /* ---------- Shell ---------- */
+  .shell{display:flex; min-height:100vh;}
+  .sidebar{
+    width:220px; flex-shrink:0; background:var(--ink); color:#EDEAE1;
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .brand{
+    padding:22px 20px 16px; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .brand .mark{
+    font-family:'IBM Plex Serif',serif; font-weight:700; font-size:20px; letter-spacing:.2px;
+    color:#fff; display:flex; align-items:baseline; gap:6px;
+  }
+  .brand .mark .dot{color:var(--gold); font-size:20px;}
+  .brand .sub{font-size:11px; color:#B9B3A2; margin-top:3px; letter-spacing:.4px; text-transform:uppercase;}
+
+  .tabs{list-style:none; margin:14px 0; padding:0; flex:1;}
+  .tabs li{margin:0;}
+  .tabs button{
+    width:100%; text-align:left; background:none; border:none; color:#D8D3C4;
+    padding:11px 20px; font-size:13.5px; cursor:pointer; display:flex; align-items:center; gap:10px;
+    border-left:3px solid transparent; font-family:inherit;
+  }
+  .tabs button .n{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8B8474; width:16px;
+  }
+  .tabs button:hover{background:rgba(255,255,255,.05); color:#fff;}
+  .tabs button.active{
+    background:rgba(255,255,255,.08); color:#fff; border-left-color:var(--gold);
+  }
+  .tabs button.active .n{color:var(--gold);}
+  .sidebar-foot{
+    padding:14px 20px 18px; font-size:10.5px; color:#8B8474; border-top:1px solid rgba(255,255,255,.08);
+    line-height:1.6;
+  }
+  .backup-btn{
+    display:block; width:100%; text-align:left; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    color:#D8D3C4; font-size:11px; font-weight:600; padding:7px 10px; border-radius:6px; margin-top:6px;
+    cursor:pointer; font-family:inherit;
+  }
+  .backup-btn:hover{background:rgba(255,255,255,.12); color:#fff;}
+
+
+  .main{flex:1; min-width:0; padding:26px 34px 60px;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap;
+  }
+  .topbar h1{
+    font-family:'IBM Plex Serif',serif; font-size:22px; font-weight:700; margin:0; color:var(--ink);
+  }
+  .topbar .desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .fy-picker{display:flex; align-items:center; gap:8px;}
+  .fy-picker label{font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); font-weight:600;}
+  select, input, textarea{
+    font-family:inherit; font-size:13.5px; padding:8px 10px; border:1px solid var(--line);
+    border-radius:7px; background:#fff; color:var(--ink);
+  }
+  select:focus, input:focus, textarea:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .fy-picker select{
+    background:var(--paper-2); border:1px solid var(--line); font-weight:600; color:var(--teal-dark);
+    padding:7px 12px;
+  }
+
+  /* ---------- Cards / KPIs ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:22px;}
+  .kpi{
+    background:var(--paper-2); border:1px solid var(--line-soft); border-radius:var(--radius);
+    padding:14px 16px; box-shadow:var(--shadow);
+  }
+  .kpi .label{font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); font-weight:600;}
+  .kpi .value{font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:600; margin-top:6px; color:var(--ink);}
+  .kpi.accent .value{color:var(--teal-dark);}
+  .kpi.gold .value{color:var(--gold);}
+  .kpi.good .value{color:var(--green);}
+  .kpi.bad .value{color:var(--rust);}
+
+  .card{
+    background:var(--paper-2); border:1px solid var(--line-soft); border-radius:var(--radius);
+    box-shadow:var(--shadow); margin-bottom:20px; overflow:hidden;
+  }
+  .card-head{
+    padding:14px 18px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .card-head h2{font-size:14px; margin:0; font-weight:600; color:var(--ink);}
+  .card-body{padding:16px 18px;}
+  .charts-grid{display:grid; grid-template-columns:1.1fr 1.4fr; gap:16px;}
+  @media(max-width:900px){.charts-grid{grid-template-columns:1fr;}}
+  .chart-wrap{position:relative; height:230px;}
+
+  /* ---------- Tables ---------- */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.4px;
+    color:var(--ink-soft); font-weight:600; padding:8px 10px; border-bottom:2px solid var(--line);
+    background:var(--paper); position:sticky; top:0;
+  }
+  tbody td{padding:8px 10px; border-bottom:1px solid var(--line-soft); vertical-align:top;}
+  tbody tr:hover{background:var(--teal-tint);}
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .table-scroll{max-height:60vh; overflow:auto; border-radius:8px;}
+  .pill{
+    display:inline-block; padding:2px 9px; border-radius:99px; font-size:11px; font-weight:600;
+  }
+  .pill.teal{background:var(--teal-tint); color:var(--teal-dark);}
+  .pill.gold{background:var(--gold-tint); color:var(--gold);}
+  .pill.rust{background:var(--rust-tint); color:var(--rust);}
+  .pill.green{background:var(--green-tint); color:var(--green);}
+  .muted{color:var(--ink-soft);}
+  .row-actions{white-space:nowrap; position:sticky; right:0; background:var(--paper-2); box-shadow:-6px 0 8px -6px rgba(0,0,0,.08);}
+  tbody tr:hover .row-actions{background:var(--teal-tint);}
+  .row-actions button{
+    background:var(--paper); border:1px solid var(--line); cursor:pointer; color:var(--ink-soft);
+    font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:6px; font-family:inherit;
+    display:inline-flex; align-items:center; gap:4px; margin-right:4px;
+  }
+  .row-actions button:hover{background:var(--teal-tint); color:var(--teal-dark); border-color:var(--teal);}
+  .row-actions .del-btn:hover{background:var(--rust-tint); color:var(--rust); border-color:var(--rust);}
+  .stmt-btn{
+    background:var(--gold-tint); border:1px solid var(--gold); color:#8a6520; cursor:pointer;
+    font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:6px; font-family:inherit;
+  }
+  .stmt-btn:hover{background:var(--gold); color:#fff;}
+  .price-ref-panel{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .price-ref-box{
+    flex:1; min-width:130px; background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px;
+  }
+  .price-ref-box .lbl{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-soft); font-weight:700; margin-bottom:3px;}
+  .price-ref-box .val{font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:700; color:var(--ink);}
+  .price-ref-box.highlight{background:var(--teal-tint); border-color:var(--teal); cursor:pointer;}
+  .price-ref-box.highlight .lbl, .price-ref-box.highlight .val{color:var(--teal-dark);}
+  .price-ref-box.highlight:hover{background:var(--teal); }
+  .price-ref-box.highlight:hover .lbl, .price-ref-box.highlight:hover .val{color:#fff;}
+  .tap-hint{font-size:10px; font-weight:500; display:block;}
+  .empty-state{
+    padding:40px 20px; text-align:center; color:var(--ink-soft);
+  }
+  .empty-state .stub{
+    font-family:'IBM Plex Serif',serif; font-size:15px; color:var(--ink); margin-bottom:4px;
+  }
+
+  /* ---------- Entry form (chalan-styled) ---------- */
+  .chalan{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); max-width:720px; overflow:hidden;
+  }
+  .chalan-head{
+    background:var(--ink); color:#EDEAE1; padding:16px 22px; display:flex; align-items:center; justify-content:space-between;
+    background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 1px, transparent 1px 14px);
+  }
+  .chalan-head .no{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gold);}
+  .chalan-head h2{font-family:'IBM Plex Serif',serif; font-size:16px; margin:2px 0 0;}
+  .type-select{padding:16px 22px 6px;}
+  .type-select label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); font-weight:600; margin-bottom:6px;}
+  .type-select select{width:100%; padding:11px 12px; font-size:14.5px; font-weight:600; color:var(--teal-dark);}
+  .field-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; padding:16px 22px;
+  }
+  .field-grid.narrow{grid-template-columns:1fr;}
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field.span2{grid-column:1/-1;}
+  .field label{font-size:11.5px; color:var(--ink-soft); font-weight:600;}
+  .field input, .field select{width:100%;}
+  .computed-amount{
+    margin:2px 22px 6px; padding:12px 16px; background:var(--gold-tint); border-radius:8px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .computed-amount .lbl{font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--gold); font-weight:700;}
+  .computed-amount .val{font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:#8a6520;}
+  .chalan-foot{
+    padding:16px 22px 22px; display:flex; gap:10px; align-items:center; border-top:1px dashed var(--line);
+  }
+  .btn{
+    border:none; border-radius:8px; padding:10px 20px; font-size:13.5px; font-weight:600; cursor:pointer;
+    font-family:inherit;
+  }
+  .btn-primary{background:var(--teal); color:#fff;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-ghost{background:none; color:var(--ink-soft); border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--paper);}
+  .save-msg{font-size:12.5px; color:var(--green); font-weight:600; opacity:0; transition:opacity .25s;}
+  .save-msg.show{opacity:1;}
+
+  .filter-bar{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .filter-bar input, .filter-bar select{padding:7px 10px; font-size:12.5px;}
+
+  .type-tag{font-size:10.5px; padding:2px 8px; border-radius:5px; font-weight:600; white-space:nowrap;}
+  .tag-Production{background:var(--teal-tint); color:var(--teal-dark);}
+  .tag-Expense{background:var(--rust-tint); color:var(--rust);}
+  .tag-Sales{background:var(--gold-tint); color:var(--gold);}
+  .tag-Payments{background:var(--green-tint); color:var(--green);}
+
+  footer.note{font-size:11.5px; color:var(--ink-soft); margin-top:30px; max-width:720px;}
+
+  /* ---------- Statement overlay (printable) ---------- */
+  .statement-overlay{
+    position:fixed; inset:0; background:rgba(31,41,51,.55); z-index:200;
+    display:flex; align-items:flex-start; justify-content:center; padding:30px 16px; overflow:auto;
+  }
+  .statement-box{
+    background:#fff; width:100%; max-width:680px; border-radius:10px; overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .statement-toolbar{
+    display:flex; align-items:center; gap:10px; padding:12px 16px; background:var(--paper); border-bottom:1px solid var(--line);
+  }
+  .statement-content{padding:34px 38px;}
+  .stmt-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--ink); padding-bottom:16px; margin-bottom:20px;}
+  .stmt-head .brandmark{font-family:'IBM Plex Serif',serif; font-weight:700; font-size:19px; color:var(--ink);}
+  .stmt-head .brandmark .dot{color:var(--gold);}
+  .stmt-head .meta{text-align:right; font-size:12px; color:var(--ink-soft);}
+  .stmt-title{font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--ink-soft); font-weight:700; margin-bottom:4px;}
+  .stmt-name{font-family:'IBM Plex Serif',serif; font-size:20px; font-weight:700; color:var(--ink); margin-bottom:22px;}
+  .stmt-summary{display:flex; gap:22px; margin-bottom:24px; flex-wrap:wrap;}
+  .stmt-summary .item{}
+  .stmt-summary .item .l{font-size:10.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-soft); font-weight:600;}
+  .stmt-summary .item .v{font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700; color:var(--ink); margin-top:2px;}
+  .stmt-summary .item.balance .v{color:var(--rust);}
+  .stmt-table{width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:10px;}
+  .stmt-table th{text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.3px; color:var(--ink-soft); border-bottom:1.5px solid var(--ink); padding:6px 8px;}
+  .stmt-table td{padding:6px 8px; border-bottom:1px solid var(--line-soft);}
+  .stmt-table td.num, .stmt-table th.num{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .stmt-section-title{font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--teal-dark); margin:22px 0 8px;}
+  .stmt-foot{margin-top:26px; padding-top:14px; border-top:1px dashed var(--line); font-size:11px; color:var(--ink-soft);}
+
+  @media print{
+    body *{visibility:hidden;}
+    .statement-box, .statement-box *{visibility:visible;}
+    .statement-overlay{position:absolute; inset:auto; padding:0; background:none;}
+    .statement-box{box-shadow:none; max-width:100%;}
+    .no-print{display:none !important;}
+  }
+  /* ---------- Mobile responsive (placed last so it wins over base rules) ---------- */
+  @media(max-width:760px){
+    .shell{flex-direction:column;}
+    .sidebar{
+      width:100%; height:auto; position:sticky; top:0; z-index:50; flex-direction:row; align-items:center;
+      flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    }
+    .brand{padding:12px 14px; border-bottom:none; border-right:1px solid rgba(255,255,255,.08); flex-shrink:0;}
+    .brand .mark{font-size:16px;}
+    .brand .sub{display:none;}
+    .tabs{display:flex; flex-direction:row; margin:0; flex:0 0 auto;}
+    .tabs button{
+      padding:14px 14px; white-space:nowrap; border-left:none; border-bottom:3px solid transparent; flex-direction:column; gap:2px;
+    }
+    .tabs button.active{border-left-color:transparent; border-bottom-color:var(--gold);}
+    .sidebar-foot{
+      display:flex; flex-direction:row; gap:6px; border-top:none; border-left:1px solid rgba(255,255,255,.08);
+      padding:8px 10px; flex-shrink:0; align-items:center; white-space:nowrap;
+    }
+    .sidebar-foot > .save-note{display:none;}
+    .backup-btn{margin-top:0; padding:8px 10px; white-space:nowrap;}
+    .main{padding:16px 14px 40px;}
+    .topbar h1{font-size:19px;}
+    .field-grid{grid-template-columns:1fr; padding:14px 16px;}
+    .chalan{max-width:100%;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .charts-grid{grid-template-columns:1fr;}
+    .price-ref-panel{flex-direction:column;}
+    .statement-content{padding:20px 18px;}
+    .stmt-summary{gap:14px;}
+    .statement-overlay{padding:0; align-items:stretch;}
+    .statement-box{max-width:100%; border-radius:0; min-height:100vh;}
+  }
+  @media(max-width:420px){
+    .kpi-row{grid-template-columns:1fr 1fr;}
+    .kpi .value{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="mark">Lot Book<span class="dot">.</span></div>
+      <div class="sub">Factory Ledger</div>
+    </div>
+    <ul class="tabs" id="tabs">
+      <li><button data-tab="entry" class="active"><span class="n">01</span> New Entry</button></li>
+      <li><button data-tab="records"><span class="n">02</span> All Records</button></li>
+      <li><button data-tab="ledger"><span class="n">03</span> Party Ledger</button></li>
+      <li><button data-tab="lots"><span class="n">04</span> Lot Costing</button></li>
+      <li><button data-tab="fabric"><span class="n">05</span> Fabric Stock</button></li>
+      <li><button data-tab="buyers"><span class="n">06</span> Buyer Ledger</button></li>
+      <li><button data-tab="workers"><span class="n">07</span> Karigar Ledger</button></li>
+      <li><button data-tab="staff"><span class="n">08</span> Staff &amp; Kharcha</button></li>
+      <li><button data-tab="cash"><span class="n">09</span> Cash Flow</button></li>
+      <li><button data-tab="dashboard"><span class="n">10</span> Dashboard</button></li>
+    </ul>
+    <div class="sidebar-foot">
+      <span class="save-note">Data saves automatically here in Claude.</span>
+      <button id="exportBtn" class="backup-btn">⬇ Export Backup</button>
+      <button id="importBtn" class="backup-btn">⬆ Import Backup</button>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">New Entry</h1>
+        <div class="desc" id="pageDesc">One form. Pick what happened, fill it in, save.</div>
+      </div>
+      <div class="fy-picker">
+        <label>Year</label>
+        <select id="fySelect"><option value="All">All years</option></select>
+      </div>
+    </div>
+
+    <div id="view"></div>
+  </main>
+</div>
+
+<div id="statementOverlay" class="statement-overlay" style="display:none;">
+  <div class="statement-box">
+    <div class="statement-toolbar no-print">
+      <button class="btn btn-ghost" id="closeStatementBtn">✕ Close</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" id="waStatementBtn">Share on WhatsApp</button>
+      <button class="btn btn-primary" id="printStatementBtn">Print / Save as PDF</button>
+    </div>
+    <div id="statementContent" class="statement-content"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   STORAGE
+   ========================================================= */
+let ENTRIES = [];
+let nextId = 1;
+let SETTINGS = {overheadInHouse: 60, overheadJobWork: 30};
+
+async function loadEntries(){
+  try{
+    const res = await window.storage.get('entries', false);
+    if(res && res.value){
+      ENTRIES = JSON.parse(res.value);
+      const sIdx = ENTRIES.findIndex(e=>e.type==='_settings');
+      if(sIdx>=0){
+        const s = ENTRIES[sIdx];
+        // migrate from old single-rate setting if present
+        SETTINGS.overheadInHouse = s.overheadInHouse!==undefined ? num(s.overheadInHouse) : num(s.overheadPerPiece||60);
+        SETTINGS.overheadJobWork = s.overheadJobWork!==undefined ? num(s.overheadJobWork) : 30;
+        ENTRIES.splice(sIdx,1);
+      }
+      nextId = ENTRIES.reduce((m,e)=>Math.max(m, e.id||0), 0) + 1;
+    }
+  }catch(e){ ENTRIES = []; }
+}
+async function saveEntries(){
+  try{
+    await window.storage.set('entries', JSON.stringify(ENTRIES), false);
+    return true;
+  }catch(e){ console.error('save failed', e); return false; }
+}
+async function saveSettings(newInHouse, newJobWork){
+  SETTINGS.overheadInHouse = num(newInHouse);
+  SETTINGS.overheadJobWork = num(newJobWork);
+  try{
+    const toSave = [...ENTRIES, {type:'_settings', overheadInHouse: SETTINGS.overheadInHouse, overheadJobWork: SETTINGS.overheadJobWork}];
+    await window.storage.set('entries', JSON.stringify(toSave), false);
+    return true;
+  }catch(e){ console.error('settings save failed', e); return false; }
+}
+
+/* =========================================================
+   TYPE / FIELD CONFIG
+   ========================================================= */
+const FIELD_META = {
+  date:        {label:'Date', type:'date', req:true},
+  lotNo:       {label:'Lot No', type:'combo', listId:'lotDatalist', req:true, ph:'e.g. 218'},
+  challanNo:   {label:'Challan No', type:'text', req:false, ph:'delivery challan / bill ref, optional'},
+  saleChallanNo: {label:'Challan No', type:'text', req:true, ph:'delivery challan / bill number'},
+  factoryNo:   {label:'Factory No', type:'select', options:['Factory 1','Factory 2'], req:true},
+  fabric:      {label:'Fabric', type:'combo', listId:'fabricDatalist', req:true},
+  item:        {label:'Item', type:'combo', listId:'itemsDatalist'},
+  itemPick:    {label:'Item / Article', type:'combo', listId:'itemsDatalist', req:true, ph:'pick or type an item'},
+  meters:      {label:'Meters', type:'number', req:true},
+  meterOpt:    {label:'Meter (optional \u2014 only if billed by meter)', type:'number', req:false, ph:'leave blank if billed by piece'},
+  rate:        {label:'Rate (₹)', type:'number'},
+  party:       {label:'Party (fabric supplier)', type:'combo', listId:'peopleDatalist'},
+  totalPieces: {label:'Total Pieces Cut', type:'number'},
+  size:        {label:'Size Range', type:'combo', listId:'sizeDatalist', ph:'e.g. M-3XL'},
+  productionMode: {label:'Production', type:'select', options:['In House','Job Work']},
+  deliveryDate:{label:'Delivery Date', type:'date'},
+  pickupDate:  {label:'Pickup Date', type:'date'},
+  vendor:      {label:'Vendor / Party', type:'combo', listId:'peopleDatalist'},
+  karigar:     {label:'Karigar / Worker', type:'combo', listId:'peopleDatalist'},
+  pieces:      {label:'Pieces', type:'number', req:true},
+  unit:        {label:'Worker / Unit', type:'combo', listId:'peopleDatalist'},
+  processType: {label:'Type of Process Work', type:'select',
+                options:['Machine Ambroidery','Computer Ambroidery','Khata Work','Accessories','Hand Work','Dying','Screen & Block Printing','Other']},
+  person:      {label:'Name', type:'combo', listId:'peopleDatalist'},
+  amount:      {label:'Amount (₹)', type:'number', req:true},
+  buyer:       {label:'Buyer', type:'combo', listId:'buyersDatalist', req:true},
+  saleRate:    {label:'Transfer Rate (₹)', type:'number', req:true},
+  wspPrice:    {label:'WSP Price (reference only)', type:'number', req:false, ph:'wholesale price, not used in calc'},
+  actualCostOverride: {label:'Actual Cost /piece (optional \u2014 overrides auto-calculated cost)', type:'number', req:false, ph:'leave blank to auto-calculate from Lot Costing'},
+  source:      {label:'Payment Source', type:'select', options:['Cash','GPay','Bank Transfer','Cheque','Other']},
+  purpose:     {label:'Purpose', type:'select', options:['Job Work','Stitching','Dhaga Cutting','Pressman','Process Work','Salary','Fabric / Cutting','Dhaga / Material Bill','Extra Expense','Other']},
+  remark:      {label:'Remark', type:'text'},
+};
+
+const TYPES = {
+  cutting:   {label:'Cutting — fabric received & cut', group:'Production',
+              fields:['date','lotNo','factoryNo','fabric','item','meters','rate','party','totalPieces','cuttingWastage','fabric2','vendor2','meters2','rate2','wastage2','size','productionMode','deliveryDate'],
+              amountFn:e=>num(e.meters)*num(e.rate),
+              extraPanel:(data)=>{
+                const meters=num(data.meters), pieces=num(data.totalPieces), wastage=num(data.cuttingWastage);
+                const meters2=num(data.meters2), rate2=num(data.rate2), wastage2=num(data.wastage2);
+                const cost1 = meters*num(data.rate);
+                const cost2 = meters2*rate2;
+                const hasSecond = meters2>0 && rate2>0;
+                const combinedMeters = meters + (hasSecond?meters2:0);
+                const combinedWastage = wastage + (hasSecond?wastage2:0);
+                const avg1 = pieces ? (combinedMeters/pieces) : null;
+                const netUsed = combinedMeters-combinedWastage;
+                const avg2 = pieces ? (netUsed/pieces) : null;
+                let html = `<div class="price-ref-panel">`;
+                if(hasSecond){
+                  html += `<div class="price-ref-box"><span class="lbl">Fabric 1 Cost</span><span class="val">₹ ${cost1.toFixed(2)}</span></div>`;
+                  html += `<div class="price-ref-box"><span class="lbl">Fabric 2 Cost</span><span class="val">₹ ${cost2.toFixed(2)}</span></div>`;
+                  html += `<div class="price-ref-box highlight"><span class="lbl">Combined Cutting Cost</span><span class="val">₹ ${(cost1+cost2).toFixed(2)}</span></div>`;
+                }
+                html += `<div class="price-ref-box"><span class="lbl">Avg 1: Fabric Used / Pieces Made</span><span class="val">${avg1!==null?avg1.toFixed(2)+' m/pc':'—'}</span></div>`;
+                if(combinedWastage>0){
+                  html += `<div class="price-ref-box"><span class="lbl">Wastage this cut</span><span class="val" style="color:var(--rust);">${combinedWastage.toFixed(1)} m</span></div>`;
+                  html += `<div class="price-ref-box highlight"><span class="lbl">Avg 2: (Used \u2212 Wastage) / Pieces</span><span class="val">${avg2!==null?avg2.toFixed(2)+' m/pc':'—'}</span></div>`;
+                }
+                html += `</div>`;
+                if(hasSecond) html += `<div style="font-size:11px; color:var(--ink-soft); margin-top:6px;">Saving this will create two linked Cutting entries \u2014 one per fabric \u2014 with the pieces counted only once, so nothing gets doubled.</div>`;
+                return html;
+              }},
+  fabricReceived:{label:'Fabric Received — stock in', group:'Production',
+              fields:['date','party','fabric','metersOpt','fabricPieces','rate'],
+              amountFn:e=>{ const p=num(e.fabricPieces); return p>0 ? p*num(e.rate) : num(e.metersOpt)*num(e.rate); },
+              extraPanel:(data)=>{
+                const p = num(data.fabricPieces);
+                if(!p) return '';
+                return `<div class="computed-amount" style="background:var(--gold-tint); margin-top:8px;">
+                  <span class="lbl">Bought by Piece</span>
+                  <span class="val" style="font-size:13px;">${p} pcs \u00d7 \u20b9${num(data.rate)} \u2014 won't count toward meter balance in Fabric Stock</span>
+                </div>`;
+              }},
+  jobwork:   {label:'Job Work — outsourced stitching', group:'Production',
+              fields:['date','lotNo','vendor','item','pieces','rate','pickupDate','deliveryDate'],
+              amountFn:e=>num(e.pieces)*num(e.rate)},
+  stitching: {label:'Stitching — in-house karigar', group:'Production',
+              fields:['date','lotNo','karigar','pieces','rate'],
+              amountFn:e=>num(e.pieces)*num(e.rate)},
+  dhaga:     {label:'Dhaga Cutting', group:'Production',
+              fields:['date','lotNo','karigar','pieces','rate'],
+              amountFn:e=>num(e.pieces)*num(e.rate)},
+  pressman:  {label:'Pressman', group:'Production',
+              fields:['date','lotNo','karigar','pieces','rate'],
+              amountFn:e=>num(e.pieces)*num(e.rate)},
+  processwork:{label:'Process Work — embroidery / print / button', group:'Production',
+              fields:['date','challanNo','lotNo','processType','itemPick','unit','pieces','meterOpt','rate'],
+              amountFn:e=>{ const m=num(e.meterOpt); return m>0 ? m*num(e.rate) : num(e.pieces)*num(e.rate); },
+              extraPanel:(data)=>{
+                const m = num(data.meterOpt);
+                if(!m) return '';
+                return `<div class="computed-amount" style="background:var(--gold-tint); margin-top:8px;">
+                  <span class="lbl">Billed by Meter</span>
+                  <span class="val" style="font-size:13px;">${m} m \u00d7 \u20b9${num(data.rate)} \u2014 pieces ignored for this amount</span>
+                </div>`;
+              }},
+  salary:    {label:'Salary', group:'Expense', fields:['date','person','amount'],
+              extraPanel:(data)=>{
+                if(!data.person || !data.date) return '';
+                const ym = data.date.slice(0,7);
+                const kharcha = ENTRIES.filter(e=>e.type==='kharcha' && e.person===data.person && e.date && e.date.slice(0,7)===ym)
+                  .reduce((s,e)=>s+num(e.amount),0);
+                const net = num(data.amount) - kharcha;
+                return `<div class="computed-amount" style="background:var(--rust-tint); margin-top:8px;"><span class="lbl" style="color:var(--rust);">Kharcha This Month</span><span class="val" style="color:var(--rust);">₹ ${money(kharcha)}</span></div>
+                  <div class="computed-amount" style="background:var(--green-tint); margin-top:8px;"><span class="lbl" style="color:var(--green);">Net Payable</span><span class="val" style="color:var(--green);">₹ ${money(net)}</span></div>`;
+              }},
+  kharcha:   {label:'Kharcha / Advance (staff)', group:'Expense', fields:['date','person','amount']},
+  extra:     {label:'Extra Expense', group:'Expense', fields:['date','person','amount']},
+  materialBill:{label:'Dhaga / Material Bill — monthly', group:'Expense', fields:['date','supplier','amount']},
+  sale:      {label:'Wenzer Art Stock Transfer', group:'Sales',
+              fields:['date','saleChallanNo','lotNo','buyer','itemPick','pieces','wspPrice','actualCostOverride','saleRate'],
+              amountFn:e=>num(e.pieces)*num(e.saleRate),
+              defaults:{buyer:'WENZER ART'},
+              extraPanel:(data)=>{
+                if(!data.lotNo) return '';
+                const lot = computeLots().find(l=>String(l.lotNo)===String(data.lotNo).trim());
+                if(!lot || !lot.pieces) return '';
+                const override = num(data.actualCostOverride);
+                const effectiveCost = override>0 ? override : lot.costPerPiece;
+                const costPlus20 = effectiveCost + 20;
+                const wsp = num(data.wspPrice);
+                return `<div class="price-ref-panel">
+                  ${wsp>0 ? `<div class="price-ref-box"><span class="lbl">WSP Price (reference)</span><span class="val">₹ ${wsp.toFixed(2)}</span></div>` : ''}
+                  <div class="price-ref-box"><span class="lbl">Auto Cost Price (Lot Costing)</span><span class="val">₹ ${lot.costPerPiece.toFixed(2)}</span></div>
+                  ${override>0 ? `<div class="price-ref-box" style="background:var(--gold-tint);"><span class="lbl">Your Override Cost</span><span class="val">₹ ${override.toFixed(2)} <span class="tap-hint">used in report</span></span></div>` : ''}
+                  <div class="price-ref-box highlight" onclick="applySuggestedRate(${costPlus20.toFixed(2)})" title="Click to fill Transfer Rate">
+                    <span class="lbl">Cost + \u20b920 (Transfer Rate)</span><span class="val">₹ ${costPlus20.toFixed(2)} <span class="tap-hint">tap to use</span></span>
+                  </div>
+                </div>`;
+              }},
+  saleOther: {label:'Sale — other buyer', group:'Sales',
+              fields:['date','saleChallanNo','lotNo','buyer','itemPick','pieces','rate'],
+              amountFn:e=>num(e.pieces)*num(e.rate)},
+  paymentReceived:{label:'Payment Received', group:'Payments', fields:['date','buyer','amount','source']},
+  paymentGiven:{label:'Payment Given', group:'Payments',
+              fields:['date','party2','purpose','lotNoOpt','amount','source']},
+  directPayment:{label:'Direct Payment \u2014 Party paid Labour directly', group:'Payments',
+              fields:['date','buyer','party2','purpose','lotNoOpt','amount','source']},
+  openingBalance:{label:'Opening Balance \u2014 carry forward from Excel', group:'Payments',
+              fields:['date','partyName','partyRole','amount'],
+              extraPanel:(data)=>{
+                const amt = num(data.amount);
+                if(!amt) return '';
+                const positive = amt>=0;
+                return `<div class="computed-amount" style="background:${positive?'var(--rust-tint)':'var(--green-tint)'}; margin-top:8px;">
+                  <span class="lbl" style="color:${positive?'var(--rust)':'var(--green)'};">${positive?'They owe / You owe (per Excel)':'Credit / Overpaid (per Excel)'}</span>
+                  <span class="val" style="font-size:13px; color:${positive?'var(--rust)':'var(--green)'};">₹ ${Math.abs(amt).toFixed(2)} \u2014 enter the exact number from Excel's Balance column, negative sign and all</span>
+                </div>`;
+              }},
+};
+FIELD_META.party2 = {label:'Party / Name', type:'combo', listId:'peopleDatalist', req:true};
+FIELD_META.lotNoOpt = {label:'Lot No (optional)', type:'combo', listId:'lotDatalist', req:false, ph:'leave blank if general'};
+FIELD_META.metersOpt = {label:'Meters (leave blank if bought by piece)', type:'number', req:false};
+FIELD_META.fabricPieces = {label:'Pieces (leave blank if bought by meter)', type:'number', req:false, ph:'e.g. 60'};
+FIELD_META.cuttingWastage = {label:'Wastage / Leftover Scrap (m) \u2014 optional', type:'number', req:false, ph:'fabric lost to cutting, not used in any piece'};
+FIELD_META.fabric2 = {label:'2nd Fabric (optional \u2014 e.g. Pant/lining, different price)', type:'combo', listId:'fabricDatalist', req:false};
+FIELD_META.vendor2 = {label:'2nd Fabric Vendor', type:'combo', listId:'peopleDatalist', req:false};
+FIELD_META.meters2 = {label:'2nd Fabric Meters', type:'number', req:false};
+FIELD_META.rate2 = {label:'2nd Fabric Rate (\u20b9)', type:'number', req:false};
+FIELD_META.wastage2 = {label:'2nd Fabric Wastage (m) \u2014 optional', type:'number', req:false};
+FIELD_META.supplier = {label:'Supplier', type:'combo', listId:'peopleDatalist', req:true, ph:'e.g. thread/dhaga supplier name'};
+FIELD_META.partyName = {label:'Party Name', type:'combo', listId:'allNamesDatalist', req:true, ph:'buyer, karigar, staff, or supplier'};
+FIELD_META.partyRole = {label:'This balance is for a...', type:'select', options:['Buyer','Karigar / Job Work','Staff','Supplier'], req:true};
+FIELD_META.purpose.req = true;
+
+const PROD_TYPES = ['cutting','jobwork','stitching','dhaga','pressman','processwork'];
+
+function num(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function normName(s){ return (s===undefined||s===null) ? '' : String(s).trim().toLowerCase(); }
+function sameName(a,b){ return normName(a)===normName(b) && normName(a)!==''; }
+function uniqueItems(){
+  const set = new Set();
+  ENTRIES.forEach(e=>{ if(e.item) set.add(e.item); if(e.itemPick) set.add(e.itemPick); });
+  return [...set].sort();
+}
+function uniqueValuesForFields(fields){
+  const set = new Set();
+  ENTRIES.forEach(e=>{
+    fields.forEach(f=>{ if(e[f]) set.add(String(e[f]).trim()); });
+  });
+  return [...set].filter(Boolean).sort();
+}
+
+function fyOf(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+'T00:00:00');
+  if(isNaN(d)) return null;
+  const y = d.getFullYear();
+  const cutoff = new Date(y,7,6);
+  const startYear = d>=cutoff ? y : y-1;
+  return startYear+'-'+String(startYear+1).slice(-2);
+}
+function money(n){
+  if(n===null||n===undefined||n==='') return '—';
+  const v = Math.round(n);
+  return v.toLocaleString('en-IN');
+}
+function fmtDate(s){
+  if(!s) return '—';
+  const d = new Date(s+'T00:00:00');
+  if(isNaN(d)) return s;
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let currentTab = 'entry';
+let currentFY = 'All';
+let MONTH_OVERRIDE = null; // 'YYYY-MM' or null; used only while generating a Monthly Report
+let editingId = null;
+let carryOverBill = null; // {date, saleChallanNo, buyer} — carried between items on the same bill
+
+const TITLES = {
+  entry:{t:'New Entry', d:'One form. Pick what happened, fill it in, save.'},
+  records:{t:'All Records', d:'Every entry you\u2019ve made, searchable and editable.'},
+  ledger:{t:'Party Ledger', d:'Pick a name, see everything for them \u2014 date, particulars, amount, running balance. Like a bank passbook.'},
+  lots:{t:'Lot Costing', d:'Type a lot once during Cutting — everything else rolls up here automatically.'},
+  fabric:{t:'Fabric Stock', d:'Fabric received vs. used in cutting \u2014 running balance, fabric by fabric.'},
+  buyers:{t:'Buyer Ledger', d:'What each buyer owes: billed vs. paid, no bill-matching needed.'},
+  workers:{t:'Karigar Ledger', d:'What each karigar / job-work vendor is owed \u2014 earned vs. paid, settled weekly, name by name.'},
+  staff:{t:'Staff & Kharcha', d:'Monthly salary vs. advances taken \u2014 net payable, name by name.'},
+  cash:{t:'Cash Flow', d:'Money in vs. money out for the factory, day to day.'},
+  dashboard:{t:'Dashboard', d:'The whole business, at a glance.'},
+};
+
+/* =========================================================
+   TAB SWITCHING
+   ========================================================= */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  currentTab = btn.dataset.tab;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b===btn));
+  editingId = null;
+  render();
+});
+document.getElementById('fySelect').addEventListener('change', e=>{
+  currentFY = e.target.value;
+  render();
+});
+
+function refreshFYOptions(){
+  const sel = document.getElementById('fySelect');
+  const fys = new Set();
+  ENTRIES.forEach(e=>{ const fy = fyOf(e.date); if(fy) fys.add(fy); });
+  const sorted = [...fys].sort();
+  const prev = sel.value || 'All';
+  sel.innerHTML = '<option value="All">All years</option>' + sorted.map(f=>`<option value="${f}">${f}</option>`).join('');
+  sel.value = sorted.includes(prev) ? prev : 'All';
+  currentFY = sel.value;
+}
+
+function entriesInFY(list){
+  let result = currentFY==='All' ? list : list.filter(e=> fyOf(e.date)===currentFY );
+  if(MONTH_OVERRIDE){
+    result = result.filter(e=> e.date && e.date.slice(0,7)===MONTH_OVERRIDE);
+  }
+  return result;
+}
+
+/* =========================================================
+   RENDER ROOT
+   ========================================================= */
+function render(){
+  document.getElementById('pageTitle').textContent = TITLES[currentTab].t;
+  document.getElementById('pageDesc').textContent = TITLES[currentTab].d;
+  const view = document.getElementById('view');
+  if(currentTab==='entry') view.innerHTML = renderEntryForm();
+  else if(currentTab==='records') view.innerHTML = renderRecords();
+  else if(currentTab==='ledger') view.innerHTML = renderPartyLedger();
+  else if(currentTab==='lots') view.innerHTML = renderLots();
+  else if(currentTab==='fabric') view.innerHTML = renderFabricStock();
+  else if(currentTab==='buyers') view.innerHTML = renderBuyers();
+  else if(currentTab==='workers') view.innerHTML = renderWorkers();
+  else if(currentTab==='staff') view.innerHTML = renderStaff();
+  else if(currentTab==='cash') view.innerHTML = renderCash();
+  else if(currentTab==='dashboard') view.innerHTML = renderDashboard();
+
+  if(currentTab==='entry') bindEntryForm();
+  if(currentTab==='records') bindRecords();
+  if(currentTab==='ledger') bindPartyLedger();
+  if(currentTab==='lots') bindLots();
+  if(currentTab==='buyers') bindBuyers();
+  if(currentTab==='workers') bindWorkers();
+  if(currentTab==='staff') bindStaff();
+  if(currentTab==='cash') bindCash();
+  if(currentTab==='dashboard') bindDashboardCharts();
+}
+
+/* =========================================================
+   ENTRY FORM
+   ========================================================= */
+function renderEntryForm(){
+  const editEntry = editingId ? ENTRIES.find(e=>e.id===editingId) : null;
+  const selectedType = editEntry ? editEntry.type : (window.__lastType || 'cutting');
+  const typeOptionsByGroup = {};
+  Object.entries(TYPES).forEach(([key,cfg])=>{
+    (typeOptionsByGroup[cfg.group] = typeOptionsByGroup[cfg.group]||[]).push([key,cfg.label]);
+  });
+  const groupHtml = Object.entries(typeOptionsByGroup).map(([g,opts])=>
+    `<optgroup label="${g}">` + opts.map(([k,l])=>`<option value="${k}" ${k===selectedType?'selected':''}>${l}</option>`).join('') + `</optgroup>`
+  ).join('');
+
+  return `
+    <div class="chalan">
+      <div class="chalan-head">
+        <div>
+          <div class="no">${editEntry ? 'EDITING ENTRY #'+editEntry.id : 'NEW ENTRY  ·  #'+String(nextId).padStart(4,'0')}</div>
+          <h2>What happened?</h2>
+        </div>
+      </div>
+      <div class="type-select">
+        <label>Entry type</label>
+        <select id="typeSelect">${groupHtml}</select>
+      </div>
+      <div id="fieldsArea"></div>
+      <div id="computedArea"></div>
+      <div class="chalan-foot">
+        <button class="btn btn-primary" id="saveBtn">${editEntry ? 'Save changes' : 'Save entry'}</button>
+        ${editEntry ? '<button class="btn btn-ghost" id="cancelEditBtn">Cancel</button>' : '<button class="btn btn-ghost" id="clearBtn">Clear</button>'}
+        <span class="save-msg" id="saveMsg">Saved ✓</span>
+      </div>
+    </div>
+    <footer class="note">Every field maps straight onto your lot, buyer, and cash records — nothing needs to be entered twice.</footer>
+  `;
+}
+
+function fieldHtml(key, value){
+  const meta = FIELD_META[key];
+  const val = value===undefined||value===null ? '' : value;
+  if(meta.type==='select'){
+    return `<div class="field"><label>${meta.label}${meta.req?' *':''}</label>
+      <select data-field="${key}">
+        <option value="">Select…</option>
+        ${meta.options.map(o=>`<option value="${o}" ${o===val?'selected':''}>${o}</option>`).join('')}
+      </select></div>`;
+  }
+  if(meta.type==='combo'){
+    return `<div class="field"><label>${meta.label}${meta.req?' *':''}</label>
+      <input data-field="${key}" type="text" list="${meta.listId}" value="${val}" placeholder="${meta.ph||''}"></div>`;
+  }
+  return `<div class="field"><label>${meta.label}${meta.req?' *':''}</label>
+    <input data-field="${key}" type="${meta.type}" value="${val}" placeholder="${meta.ph||''}"></div>`;
+}
+
+function ensureDatalist(id){
+  let dl = document.getElementById(id);
+  if(!dl){
+    dl = document.createElement('datalist');
+    dl.id = id;
+    document.body.appendChild(dl);
+  }
+  return dl;
+}
+function refreshAllDatalists(){
+  ensureDatalist('itemsDatalist').innerHTML = uniqueItems().map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('buyersDatalist').innerHTML = uniqueValuesForFields(['buyer']).map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('peopleDatalist').innerHTML = uniqueValuesForFields(
+    ['karigar','vendor','unit','person','party2','supplier','party']
+  ).map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('fabricDatalist').innerHTML = uniqueValuesForFields(['fabric']).map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('sizeDatalist').innerHTML = uniqueValuesForFields(['size']).map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('lotDatalist').innerHTML = uniqueValuesForFields(['lotNo']).map(i=>`<option value="${i}">`).join('');
+  ensureDatalist('allNamesDatalist').innerHTML = uniqueValuesForFields(
+    ['buyer','karigar','vendor','unit','person','party2','supplier','party']
+  ).map(i=>`<option value="${i}">`).join('');
+}
+
+function applySuggestedRate(rate){
+  const el = document.querySelector('[data-field="saleRate"]');
+  if(el){ el.value = rate; el.dispatchEvent(new Event('input')); }
+}
+window.applySuggestedRate = applySuggestedRate;
+
+function bindEntryForm(){
+  const typeSelect = document.getElementById('typeSelect');
+  const fieldsArea = document.getElementById('fieldsArea');
+  const computedArea = document.getElementById('computedArea');
+  const editEntry = editingId ? ENTRIES.find(e=>e.id===editingId) : null;
+
+  function paintFields(){
+    const type = typeSelect.value;
+    window.__lastType = type;
+    const cfg = TYPES[type];
+    const isBillType = (type==='sale' || type==='saleOther');
+    const data = editEntry && editEntry.type===type ? editEntry :
+      {date:new Date().toISOString().slice(0,10), ...(cfg.defaults||{}), ...((isBillType && carryOverBill) ? carryOverBill : {})};
+    refreshAllDatalists();
+    const banner = (!editEntry && isBillType && carryOverBill) ? `
+      <div class="computed-amount" style="background:var(--gold-tint); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+        <span class="lbl" style="color:#8a6520;">📋 Adding another item to Challan ${carryOverBill.saleChallanNo||'—'} \u2014 ${carryOverBill.buyer||''}</span>
+        <button type="button" id="startNewBillBtn" class="stmt-btn" style="padding:5px 10px; font-size:11px;">Start New Bill</button>
+      </div>` : '';
+    fieldsArea.innerHTML = banner + `<div class="field-grid">` + cfg.fields.map(f=>fieldHtml(f, data[f])).join('') +
+      fieldHtml('remark', data.remark) + `</div>`;
+    // default date to today if blank
+    const dateInput = fieldsArea.querySelector('[data-field="date"]');
+    if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0,10);
+    paintComputed();
+    fieldsArea.querySelectorAll('input,select').forEach(el=>{
+      el.addEventListener('input', paintComputed);
+    });
+    const newBillBtn = document.getElementById('startNewBillBtn');
+    if(newBillBtn) newBillBtn.addEventListener('click', ()=>{ carryOverBill = null; paintFields(); });
+  }
+
+  function paintComputed(){
+    const type = typeSelect.value;
+    const cfg = TYPES[type];
+    const data = {};
+    fieldsArea.querySelectorAll('[data-field]').forEach(el=>{ data[el.dataset.field]=el.value; });
+    let html = '';
+    if(cfg.amountFn){
+      html += `<div class="computed-amount"><span class="lbl">Amount</span><span class="val">₹ ${money(cfg.amountFn(data))}</span></div>`;
+    }
+    if(cfg.extraPanel){
+      html += cfg.extraPanel(data);
+    }
+    computedArea.innerHTML = html;
+  }
+
+  typeSelect.addEventListener('change', paintFields);
+  paintFields();
+
+  document.getElementById('saveBtn').addEventListener('click', async ()=>{
+    const type = typeSelect.value;
+    const cfg = TYPES[type];
+    const data = {id: editEntry?editEntry.id:nextId, type};
+    let ok = true;
+    fieldsArea.querySelectorAll('[data-field]').forEach(el=>{
+      data[el.dataset.field] = el.value;
+      if(FIELD_META[el.dataset.field].req && !el.value){ ok=false; el.style.borderColor='var(--rust)'; }
+      else{ el.style.borderColor=''; }
+    });
+    if(!ok){ 
+      const msg = document.getElementById('saveMsg');
+      msg.textContent = 'Fill the required fields (*)'; msg.style.color='var(--rust)'; msg.classList.add('show');
+      setTimeout(()=>msg.classList.remove('show'), 2200);
+      return;
+    }
+    data.amount = cfg.amountFn ? cfg.amountFn(data) : num(data.amount);
+    data.fy = fyOf(data.date);
+
+    const msg = document.getElementById('saveMsg');
+    const splitSecondFabric = !editEntry && type==='cutting' && num(data.meters2)>0 && num(data.rate2)>0;
+
+    if(editEntry){
+      const idx = ENTRIES.findIndex(e=>e.id===editEntry.id);
+      ENTRIES[idx] = data;
+      editingId = null;
+    }else if(splitSecondFabric){
+      const entry2 = {
+        id: nextId+1, type: 'cutting',
+        date: data.date, lotNo: data.lotNo, factoryNo: data.factoryNo,
+        fabric: data.fabric2, item: data.item, meters: data.meters2, rate: data.rate2,
+        party: data.vendor2, totalPieces: '0', cuttingWastage: data.wastage2||'',
+        size: data.size, productionMode: data.productionMode, deliveryDate: data.deliveryDate,
+        remark: '2nd fabric \u2014 linked to Lot ' + (data.lotNo||''),
+      };
+      entry2.amount = num(entry2.meters)*num(entry2.rate);
+      entry2.fy = fyOf(entry2.date);
+      delete data.fabric2; delete data.vendor2; delete data.meters2; delete data.rate2; delete data.wastage2;
+      ENTRIES.push(data);
+      ENTRIES.push(entry2);
+      nextId += 2;
+    }else{
+      ENTRIES.push(data);
+      nextId++;
+    }
+    await saveEntries();
+    refreshFYOptions();
+    if(!editEntry && (type==='sale' || type==='saleOther')){
+      carryOverBill = {date: data.date, saleChallanNo: data.saleChallanNo, buyer: data.buyer};
+    }
+    msg.textContent = splitSecondFabric ? 'Saved \u2713 (2 entries, one per fabric)' : 'Saved ✓';
+    msg.style.color='var(--green)'; msg.classList.add('show');
+    setTimeout(()=>msg.classList.remove('show'), 2200);
+    if(editEntry){ render(); } else { paintFields(); }
+  });
+
+  const clearBtn = document.getElementById('clearBtn');
+  if(clearBtn) clearBtn.addEventListener('click', paintFields);
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  if(cancelBtn) cancelBtn.addEventListener('click', ()=>{ editingId=null; render(); });
+}
+
+/* =========================================================
+   RECORDS TAB
+   ========================================================= */
+function findPossibleDuplicates(){
+  const groups = {};
+  ENTRIES.forEach(e=>{
+    const name = e.karigar||e.vendor||e.unit||e.person||e.buyer||e.party2||e.supplier||e.party||'';
+    const key = [e.type, e.date, name, e.lotNo||'', e.amount].join('|');
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(e);
+  });
+  return Object.values(groups).filter(g=>g.length>1);
+}
+
+function renderRecords(){
+  const dupGroups = findPossibleDuplicates();
+  const dupCount = dupGroups.reduce((s,g)=>s+g.length,0);
+  const dupBanner = dupGroups.length ? `
+    <div class="card" style="border-color:var(--rust);">
+      <div class="card-head" style="background:var(--rust-tint);">
+        <h2 style="color:var(--rust);">⚠ ${dupGroups.length} possible duplicate${dupGroups.length>1?'s':''} found (${dupCount} entries)</h2>
+        <button class="stmt-btn" id="showDupsBtn">Review them</button>
+      </div>
+      <div class="card-body" style="font-size:12.5px; color:var(--ink-soft);">
+        Same type, date, name, lot, and amount — likely entered twice by mistake. Click "Review them" to check and delete extras.
+      </div>
+    </div>` : '';
+  return `
+    ${dupBanner}
+    <div class="card">
+      <div class="card-head">
+        <h2>All entries (${entriesInFY(ENTRIES).length})</h2>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar" style="flex-wrap:wrap; gap:8px;">
+          <input id="searchBox" type="text" placeholder="Search lot no, name, buyer…" style="width:200px;">
+          <select id="typeFilter">
+            <option value="">All types</option>
+            ${Object.entries(TYPES).map(([k,c])=>`<option value="${k}">${c.label}</option>`).join('')}
+          </select>
+          <span style="color:var(--line); margin:0 2px;">|</span>
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft);">From</label>
+          <input type="date" id="recordsFromDate" style="padding:6px 8px; font-size:12px;">
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft);">To</label>
+          <input type="date" id="recordsToDate" style="padding:6px 8px; font-size:12px;">
+          <button class="btn btn-ghost" id="recordsTodayBtn" style="padding:6px 12px; font-size:12px;">Today</button>
+          <button class="btn btn-ghost" id="recordsClearDateBtn" style="padding:6px 12px; font-size:12px;">Clear Dates</button>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Type</th><th>Lot</th><th>Party / Buyer</th><th class="num">Pieces</th><th class="num">Amount</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="recordsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function recordDisplayName(e){
+  if(e.type==='directPayment') return `${e.buyer||'?'} → ${e.party2||'?'}`;
+  return e.karigar || e.vendor || e.person || e.buyer || e.party2 || e.unit || e.party || e.supplier || e.partyName || '—';
+}
+
+function bindRecords(){
+  const body = document.getElementById('recordsBody');
+  const search = document.getElementById('searchBox');
+  const typeFilter = document.getElementById('typeFilter');
+  const fromDate = document.getElementById('recordsFromDate');
+  const toDate = document.getElementById('recordsToDate');
+  const todayBtn = document.getElementById('recordsTodayBtn');
+  const clearDateBtn = document.getElementById('recordsClearDateBtn');
+  let dupFilterIds = null;
+
+  function paint(){
+    let list = entriesInFY(ENTRIES).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'') || b.id-a.id);
+    if(dupFilterIds){ list = list.filter(e=>dupFilterIds.has(e.id)); }
+    const q = search.value.trim().toLowerCase();
+    if(q){
+      list = list.filter(e => JSON.stringify(e).toLowerCase().includes(q));
+    }
+    if(typeFilter.value){ list = list.filter(e=>e.type===typeFilter.value); }
+    if(fromDate.value){ list = list.filter(e=>e.date && e.date>=fromDate.value); }
+    if(toDate.value){ list = list.filter(e=>e.date && e.date<=toDate.value); }
+
+    if(list.length===0){
+      const msg = dupFilterIds ? 'No duplicates in this view (they may have already been cleaned up).' : 'Add your first one from New Entry.';
+      body.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="stub">No entries</div>${msg}</div></td></tr>`;
+      return;
+    }
+    body.innerHTML = list.map(e=>{
+      const cfg = TYPES[e.type];
+      const isDup = dupFilterIds && dupFilterIds.has(e.id);
+      return `<tr ${isDup?'style="background:var(--rust-tint);"':''}>
+        <td>${fmtDate(e.date)}</td>
+        <td><span class="type-tag tag-${cfg.group}">${cfg.label.split(' — ')[0]}</span></td>
+        <td>${e.lotNo || '<span class="muted">—</span>'}</td>
+        <td>${recordDisplayName(e)}</td>
+        <td class="num">${e.pieces ? money(e.pieces) : '<span class="muted">—</span>'}</td>
+        <td class="num">₹ ${money(e.amount)}</td>
+        <td class="row-actions">
+          <button class="edit-btn" data-edit="${e.id}" title="Edit this entry">✎ Edit</button>
+          <button class="del-btn" data-del="${e.id}" title="Delete this entry">✕ Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    body.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>{
+      editingId = parseInt(b.dataset.edit);
+      currentTab = 'entry';
+      document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('active', x.dataset.tab==='entry'));
+      render();
+    }));
+    body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ()=>{
+      if(!confirm('Delete this entry? This cannot be undone.')) return;
+      const id = parseInt(b.dataset.del);
+      ENTRIES = ENTRIES.filter(e=>e.id!==id);
+      await saveEntries();
+      refreshFYOptions();
+      if(dupFilterIds) dupFilterIds.delete(id);
+      paint();
+    }));
+  }
+  search.addEventListener('input', ()=>{ dupFilterIds = null; paint(); });
+  typeFilter.addEventListener('change', ()=>{ dupFilterIds = null; paint(); });
+  fromDate.addEventListener('change', ()=>{ dupFilterIds = null; paint(); });
+  toDate.addEventListener('change', ()=>{ dupFilterIds = null; paint(); });
+  todayBtn.addEventListener('click', ()=>{
+    const today = new Date().toISOString().slice(0,10);
+    fromDate.value = today; toDate.value = today;
+    dupFilterIds = null; paint();
+  });
+  clearDateBtn.addEventListener('click', ()=>{
+    fromDate.value=''; toDate.value='';
+    dupFilterIds = null; paint();
+  });
+  const showDupsBtn = document.getElementById('showDupsBtn');
+  if(showDupsBtn){
+    showDupsBtn.addEventListener('click', ()=>{
+      const groups = findPossibleDuplicates();
+      dupFilterIds = new Set();
+      groups.forEach(g=>g.forEach(e=>dupFilterIds.add(e.id)));
+      typeFilter.value = '';
+      search.value = '';
+      paint();
+    });
+  }
+  paint();
+}
+
+/* =========================================================
+   PARTY LEDGER — Tally-style: pick a name, see a running balance
+   ========================================================= */
+const LEDGER_TYPE_MAP = {
+  cutting:      null, // not party-linked
+  fabricReceived: {field:'party', direction:'charge', label:'Fabric Received', hasPieces:false},
+  jobwork:      {field:'vendor', direction:'charge', label:'Job Work', hasPieces:true},
+  stitching:    {field:'karigar', direction:'charge', label:'Stitching', hasPieces:true},
+  dhaga:        {field:'karigar', direction:'charge', label:'Dhaga Cutting', hasPieces:true},
+  pressman:     {field:'karigar', direction:'charge', label:'Pressman', hasPieces:true},
+  processwork:  {field:'unit', direction:'charge', label:e=>`Process Work (${e.processType||'\u2014'})`, hasPieces:true},
+  salary:       {field:'person', direction:'charge', label:'Salary', hasPieces:false},
+  extra:        {field:'person', direction:'charge', label:'Extra Expense', hasPieces:false},
+  materialBill: {field:'supplier', direction:'charge', label:'Dhaga / Material Bill', hasPieces:false},
+  kharcha:      {field:'person', direction:'payment', label:'Kharcha / Advance', hasPieces:false},
+  sale:         {field:'buyer', direction:'charge', label:e=>`Sale${e.saleChallanNo?' (Challan '+e.saleChallanNo+')':''}`, hasPieces:true},
+  saleOther:    {field:'buyer', direction:'charge', label:e=>`Sale${e.saleChallanNo?' (Challan '+e.saleChallanNo+')':''}`, hasPieces:true},
+  paymentReceived:{field:'buyer', direction:'payment', label:e=>`Payment Received (${e.source||'\u2014'})`, hasPieces:false},
+  paymentGiven: {field:'party2', direction:'payment', label:e=>`Payment Given \u2014 ${e.purpose||'\u2014'} (${e.source||'\u2014'})`, hasPieces:false},
+};
+
+function allPartyNames(){
+  const set = new Set();
+  ENTRIES.forEach(e=>{
+    const cfg = LEDGER_TYPE_MAP[e.type];
+    if(cfg && e[cfg.field]) set.add(String(e[cfg.field]).trim());
+    if(e.type==='directPayment'){
+      if(e.buyer) set.add(String(e.buyer).trim());
+      if(e.party2) set.add(String(e.party2).trim());
+    }
+    if(e.type==='openingBalance' && e.partyName) set.add(String(e.partyName).trim());
+  });
+  return [...set].sort();
+}
+
+function itemForLot(lotNo){
+  if(!lotNo) return '';
+  const e = ENTRIES.find(x=>x.type==='cutting' && x.lotNo===lotNo && x.item);
+  return e ? e.item : '';
+}
+
+function computePartyLedger(name){
+  const list = entriesInFY(ENTRIES);
+  const rows = [];
+  list.forEach(e=>{
+    if(e.type==='openingBalance' && sameName(e.partyName,name)){
+      const amt = num(e.amount);
+      rows.push({date:e.date, lotNo:'', item:'', pieces:null, rate:null,
+        particulars:'Opening Balance (carried forward from Excel)',
+        charge: amt>=0?amt:0, payment: amt<0?-amt:0});
+      return;
+    }
+    if(e.type==='directPayment'){
+      if(sameName(e.buyer,name)){
+        rows.push({date:e.date, lotNo:e.lotNo||'', item: itemForLot(e.lotNo), pieces:null, rate:null,
+          particulars:`Direct Payment \u2014 paid to ${e.party2||'labour'}`, charge:0, payment:num(e.amount)});
+      }
+      if(sameName(e.party2,name)){
+        rows.push({date:e.date, lotNo:e.lotNo||'', item: itemForLot(e.lotNo), pieces:null, rate:null,
+          particulars:`Direct Payment \u2014 received from ${e.buyer||'buyer'}`, charge:0, payment:num(e.amount)});
+      }
+      return;
+    }
+    const cfg = LEDGER_TYPE_MAP[e.type];
+    if(!cfg || !sameName(e[cfg.field],name)) return;
+    const amt = num(e.amount);
+    const label = typeof cfg.label==='function' ? cfg.label(e) : cfg.label;
+    rows.push({
+      date:e.date,
+      lotNo: e.lotNo||'',
+      item: cfg.hasPieces ? (e.itemPick||e.item||itemForLot(e.lotNo)) : '',
+      pieces: cfg.hasPieces ? num(e.pieces) : null,
+      rate: cfg.hasPieces ? num(e.rate!==undefined&&e.rate!==''?e.rate:e.saleRate) : null,
+      particulars: label,
+      charge: cfg.direction==='charge' ? amt : 0,
+      payment: cfg.direction==='payment' ? amt : 0,
+    });
+  });
+  rows.sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+  let running = 0;
+  rows.forEach(r=>{ running += r.charge - r.payment; r.balance = running; });
+  return {name, rows, balance: running};
+}
+
+function renderPartyLedger(){
+  const names = allPartyNames();
+  const today = new Date().toISOString().slice(0,10);
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+      <button class="stmt-btn" id="addOpeningBalanceBtn" style="font-size:12.5px; padding:8px 16px;">+ Add Opening Balance (from Excel)</button>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>Pick a name</h2>
+      </div>
+      <div class="card-body">
+        <div class="filter-bar" style="margin-bottom:10px;">
+          <input type="text" id="ledgerNameInput" list="peopleDatalist" placeholder="Type or pick a name…" style="width:220px;">
+          <button class="btn btn-primary" id="ledgerGoBtn" style="padding:8px 16px; font-size:12.5px;">Show Ledger</button>
+        </div>
+        <div class="filter-bar" style="flex-wrap:wrap; gap:8px;">
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft);">Month</label>
+          <select id="ledgerMonthFilter"><option value="">All Months</option></select>
+          <span style="color:var(--line); margin:0 4px;">|</span>
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft);">From</label>
+          <input type="date" id="ledgerFromDate" style="padding:6px 8px; font-size:12px;">
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft);">To</label>
+          <input type="date" id="ledgerToDate" style="padding:6px 8px; font-size:12px;">
+          <button class="btn btn-ghost" id="ledgerTodayBtn" style="padding:6px 12px; font-size:12px;">Today</button>
+          <button class="btn btn-ghost" id="ledgerClearDateBtn" style="padding:6px 12px; font-size:12px;">Clear Dates</button>
+        </div>
+        <div style="font-size:11.5px; color:var(--ink-soft); margin-top:8px;">
+          Works for anyone \u2014 buyer, karigar, job-work vendor, staff, or supplier. Use Month for a quick pick, or From/To (down to a single day \u2014 tap "Today" for just today's work) for exact control, just like an Excel date filter. ${names.length} name${names.length!==1?'s':''} on file.
+        </div>
+      </div>
+    </div>
+    <div id="ledgerResult"></div>
+  `;
+}
+
+function renderLedgerTable(name, filters){
+  filters = filters || {};
+  if(!name){
+    return `<div class="card"><div class="card-body"><div class="empty-state"><div class="stub">No name selected</div>Type a name above and tap "Show Ledger".</div></div></div>`;
+  }
+  const l = computePartyLedger(name);
+  if(l.rows.length===0){
+    return `<div class="card"><div class="card-body"><div class="empty-state"><div class="stub">No records found for "${name}"</div>Check the spelling matches exactly what you've typed elsewhere.</div></div></div>`;
+  }
+  const monthKey = (d)=>{ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?'':(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')); };
+  const monthLabel = (k)=>{ const [y,m]=k.split('-'); return calendar_month_abbr(parseInt(m))+'-'+y.slice(2); };
+
+  const hasDateRange = !!(filters.from || filters.to);
+  let visibleRows = l.rows;
+  let filterLabel = '';
+  if(hasDateRange){
+    visibleRows = l.rows.filter(r=>{
+      if(!r.date) return false;
+      if(filters.from && r.date < filters.from) return false;
+      if(filters.to && r.date > filters.to) return false;
+      return true;
+    });
+    if(filters.from && filters.to && filters.from===filters.to) filterLabel = ' — ' + fmtDate(filters.from);
+    else filterLabel = ' — ' + (filters.from?fmtDate(filters.from):'start') + ' to ' + (filters.to?fmtDate(filters.to):'today');
+  }else if(filters.month){
+    visibleRows = l.rows.filter(r=>monthKey(r.date)===filters.month);
+    filterLabel = ' — ' + monthLabel(filters.month);
+  }
+  const isFiltered = hasDateRange || filters.month;
+
+  const rowsHtml = visibleRows.map(r=>`
+    <tr>
+      <td>${fmtDate(r.date)}</td>
+      <td class="num">${r.lotNo||'<span class="muted">—</span>'}</td>
+      <td>${r.item||'<span class="muted">—</span>'}</td>
+      <td>${r.particulars}</td>
+      <td class="num">${r.pieces!==null ? money(r.pieces) : ''}</td>
+      <td class="num">${r.rate!==null && !isNaN(r.rate) ? '₹ '+r.rate.toFixed(2) : ''}</td>
+      <td class="num">${r.charge? money(r.charge) : ''}</td>
+      <td class="num">${r.payment? money(r.payment) : ''}</td>
+      <td class="num" style="font-weight:600;">₹ ${money(r.balance)}</td>
+    </tr>`).join('');
+
+  const totPieces = visibleRows.reduce((s,r)=>s+(r.pieces||0),0);
+  const totCharge = visibleRows.reduce((s,r)=>s+r.charge,0);
+  const totPayment = visibleRows.reduce((s,r)=>s+r.payment,0);
+  const totBalance = totCharge - totPayment;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi gold"><div class="label">${isFiltered?'Billed / Work Done (filtered)':'Total Billed / Work Done'}</div><div class="value">₹ ${money(totCharge)}</div></div>
+      <div class="kpi accent"><div class="label">${isFiltered?'Paid / Received (filtered)':'Total Paid / Received'}</div><div class="value">₹ ${money(totPayment)}</div></div>
+      <div class="kpi ${totBalance>0?'bad':'good'}"><div class="label">${isFiltered?'Balance (filtered period)':'Balance (overall)'}</div><div class="value">₹ ${money(isFiltered?totBalance:l.balance)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>${name}${filterLabel}</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th class="num">Lot No</th><th>Item</th><th>Particulars</th><th class="num">Pieces</th><th class="num">Rate</th><th class="num">Amount</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead>
+            <tbody>${rowsHtml.length ? rowsHtml : `<tr><td colspan="9"><div class="empty-state">No entries in this date range.</div></td></tr>`}</tbody>
+            <tfoot><tr style="background:var(--gold-tint); font-weight:700;">
+              <td colspan="4">Total</td>
+              <td class="num">${money(totPieces)}</td>
+              <td></td>
+              <td class="num">₹ ${money(totCharge)}</td>
+              <td class="num">₹ ${money(totPayment)}</td>
+              <td class="num">₹ ${money(totBalance)}</td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Balance column (right) is the running total as of that entry, across all history. The Total row at the bottom sums whatever's currently visible \u2014 filter by month, or set From/To dates (even just "Today"), to total exactly that period.</footer>
+  `;
+}
+
+function calendar_month_abbr(m){
+  return ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m]||'';
+}
+
+function bindPartyLedger(){
+  const input = document.getElementById('ledgerNameInput');
+  const btn = document.getElementById('ledgerGoBtn');
+  const result = document.getElementById('ledgerResult');
+  const monthFilter = document.getElementById('ledgerMonthFilter');
+  const fromDate = document.getElementById('ledgerFromDate');
+  const toDate = document.getElementById('ledgerToDate');
+  const todayBtn = document.getElementById('ledgerTodayBtn');
+  const clearDateBtn = document.getElementById('ledgerClearDateBtn');
+
+  function refreshMonthOptions(name){
+    const l = computePartyLedger(name);
+    const monthKey = (d)=>{ if(!d) return ''; const dt=new Date(d+'T00:00:00'); return isNaN(dt)?'':(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')); };
+    const months = [...new Set(l.rows.map(r=>monthKey(r.date)).filter(Boolean))].sort();
+    monthFilter.innerHTML = '<option value="">All Months</option>' + months.map(k=>{
+      const [y,m] = k.split('-');
+      return `<option value="${k}">${calendar_month_abbr(parseInt(m))}-${y.slice(2)}</option>`;
+    }).join('');
+  }
+
+  function show(){
+    const name = input.value.trim();
+    if(name) refreshMonthOptions(name);
+    result.innerHTML = renderLedgerTable(name, {
+      month: monthFilter.value,
+      from: fromDate.value,
+      to: toDate.value,
+    });
+  }
+  btn.addEventListener('click', show);
+  input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') show(); });
+  monthFilter.addEventListener('change', ()=>{ fromDate.value=''; toDate.value=''; show(); });
+  fromDate.addEventListener('change', ()=>{ monthFilter.value=''; show(); });
+  toDate.addEventListener('change', ()=>{ monthFilter.value=''; show(); });
+  todayBtn.addEventListener('click', ()=>{
+    const today = new Date().toISOString().slice(0,10);
+    monthFilter.value = '';
+    fromDate.value = today;
+    toDate.value = today;
+    show();
+  });
+  clearDateBtn.addEventListener('click', ()=>{
+    fromDate.value=''; toDate.value=''; monthFilter.value='';
+    show();
+  });
+
+  const obBtn = document.getElementById('addOpeningBalanceBtn');
+  if(obBtn){
+    obBtn.addEventListener('click', ()=>{
+      window.__lastType = 'openingBalance';
+      currentTab = 'entry';
+      document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('active', x.dataset.tab==='entry'));
+      render();
+    });
+  }
+}
+
+/* =========================================================
+   COMPUTED: LOT COSTING
+   ========================================================= */
+function computeLots(){
+  const list = entriesInFY(ENTRIES);
+  const lots = {};
+  function ensure(lotNo, date){
+    if(!lots[lotNo]) lots[lotNo] = {
+      lotNo, date, item:'', factoryNo:'', pieces:0, meters:0, wastage:0, cuttingCost:0, jobWorkCost:0, stitchingCost:0,
+      perPieceCost:0, processCost:0, delivered:0, saleAmount:0, buyers:new Set(),
+      jobWorkPieces:0, stitchingPieces:0
+    };
+    if(date && (!lots[lotNo].date || date < lots[lotNo].date)) lots[lotNo].date = date;
+  }
+  list.filter(e=>e.type==='cutting' && e.lotNo).forEach(e=>{
+    ensure(e.lotNo, e.date);
+    const l = lots[e.lotNo];
+    l.pieces += num(e.totalPieces);
+    l.meters += num(e.meters);
+    l.wastage += num(e.cuttingWastage);
+    l.cuttingCost += num(e.meters)*num(e.rate);
+    if(!l.item && e.item) l.item = e.item;
+    if(!l.factoryNo && e.factoryNo) l.factoryNo = e.factoryNo;
+  });
+  list.filter(e=>e.type==='jobwork' && e.lotNo).forEach(e=>{
+    ensure(e.lotNo,e.date); lots[e.lotNo].jobWorkCost += num(e.amount); lots[e.lotNo].jobWorkPieces += num(e.pieces);
+  });
+  list.filter(e=>e.type==='stitching' && e.lotNo).forEach(e=>{
+    ensure(e.lotNo,e.date); lots[e.lotNo].stitchingCost += num(e.amount); lots[e.lotNo].stitchingPieces += num(e.pieces);
+  });
+  list.filter(e=>['dhaga','pressman'].includes(e.type) && e.lotNo).forEach(e=>{ ensure(e.lotNo,e.date); lots[e.lotNo].perPieceCost += num(e.amount); });
+  list.filter(e=>e.type==='processwork' && e.lotNo).forEach(e=>{ ensure(e.lotNo,e.date); lots[e.lotNo].processCost += num(e.amount); });
+  list.filter(e=>e.type==='sale' && e.lotNo).forEach(e=>{
+    ensure(e.lotNo,e.date);
+    const l = lots[e.lotNo];
+    l.delivered += num(e.pieces);
+    l.saleAmount += num(e.amount);
+    if(e.buyer) l.buyers.add(e.buyer);
+  });
+  list.filter(e=>e.type==='saleOther' && e.lotNo).forEach(e=>{
+    ensure(e.lotNo,e.date);
+    const l = lots[e.lotNo];
+    l.delivered += num(e.pieces);
+    l.saleAmount += num(e.amount);
+    if(e.buyer) l.buyers.add(e.buyer);
+  });
+
+  return Object.values(lots).map(l=>{
+    const overheadCost = (l.stitchingPieces * (SETTINGS.overheadInHouse||0)) + (l.jobWorkPieces * (SETTINGS.overheadJobWork||0));
+    const totalCost = l.cuttingCost+l.jobWorkCost+l.stitchingCost+l.perPieceCost+l.processCost+overheadCost;
+    const costPerPiece = l.pieces ? totalCost/l.pieces : 0;
+    const inStock = l.pieces - l.delivered;
+    const profit = l.delivered>0 ? l.saleAmount-totalCost : null;
+    const avgPerPiece = l.pieces ? (l.meters/l.pieces) : 0;
+    const netAvgPerPiece = l.pieces ? ((l.meters-l.wastage)/l.pieces) : 0;
+    let source = '-';
+    if(l.jobWorkCost>0 && l.stitchingCost>0) source='Mixed';
+    else if(l.jobWorkCost>0) source='Outsourced';
+    else if(l.stitchingCost>0) source='In-House';
+    return {...l, overheadCost, totalCost, costPerPiece, inStock, profit, source, avgPerPiece, netAvgPerPiece,
+      deliveredTo: l.buyers.size ? [...l.buyers].join(', ') : '-'};
+  }).sort((a,b)=> a.lotNo.localeCompare(b.lotNo, undefined, {numeric:true}));
+}
+
+function renderLots(){
+  const lots = computeLots();
+  const totals = lots.reduce((a,l)=>({
+    pieces:a.pieces+l.pieces, cost:a.cost+l.totalCost, delivered:a.delivered+l.delivered,
+    sale:a.sale+l.saleAmount, profit:a.profit+(l.profit||0)
+  }), {pieces:0,cost:0,delivered:0,sale:0,profit:0});
+
+  const rows = lots.length ? lots.map(l=>`
+    <tr data-lotno="${String(l.lotNo).toLowerCase()}" data-item="${(l.item||'').toLowerCase()}">
+      <td class="num">${l.lotNo}</td>
+      <td>${fmtDate(l.date)}</td>
+      <td>${l.factoryNo||'<span class="muted">—</span>'}</td>
+      <td>${l.item||'<span class="muted">—</span>'}</td>
+      <td class="num">${money(l.pieces)}</td>
+      <td class="num">${l.avgPerPiece? l.avgPerPiece.toFixed(2) : '—'}</td>
+      <td class="num">${l.wastage? l.wastage.toFixed(1)+' m' : '<span class="muted">—</span>'}</td>
+      <td class="num">${l.wastage? l.netAvgPerPiece.toFixed(2) : '<span class="muted">—</span>'}</td>
+      <td class="num">${money(l.overheadCost)}</td>
+      <td class="num">${money(l.totalCost)}</td>
+      <td class="num">${money(l.costPerPiece)}</td>
+      <td><span class="pill ${l.source==='Mixed'?'gold':l.source==='Outsourced'?'teal':l.source==='In-House'?'green':''}">${l.source}</span></td>
+      <td class="num">${money(l.delivered)}</td>
+      <td class="num">${money(l.inStock)}</td>
+      <td class="num">${money(l.saleAmount)}</td>
+      <td class="num" style="color:${l.profit==null?'inherit':(l.profit>=0?'var(--green)':'var(--rust)')}">${l.profit==null?'<span class="muted">—</span>':money(l.profit)}</td>
+      <td>${l.deliveredTo}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="17"><div class="empty-state"><div class="stub">No lots yet</div>Add a Cutting entry to start a lot.</div></td></tr>`;
+
+  const factories = {};
+  lots.forEach(l=>{
+    const f = l.factoryNo || 'Unassigned';
+    if(!factories[f]) factories[f] = {factory:f, lots:0, pieces:0, meters:0, cost:0};
+    factories[f].lots += 1;
+    factories[f].pieces += l.pieces;
+    factories[f].meters += l.meters;
+    factories[f].cost += l.cuttingCost;
+  });
+  const factoryRows = Object.values(factories).length ? Object.values(factories).sort((a,b)=>a.factory.localeCompare(b.factory)).map(f=>`
+    <tr>
+      <td>${f.factory}</td>
+      <td class="num">${f.lots}</td>
+      <td class="num">${money(f.pieces)}</td>
+      <td class="num">${f.meters.toFixed(1)}</td>
+      <td class="num">₹ ${money(f.cost)}</td>
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state">No cutting logged yet.</div></td></tr>`;
+
+  const jw = entriesInFY(ENTRIES).filter(e=>e.type==='jobwork').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const jwRows = jw.length ? jw.map(e=>{
+    const status = e.deliveryDate ? 'Delivered' : (e.pickupDate ? 'Picked Up' : 'Pending Pickup');
+    const pillClass = status==='Delivered'?'green':(status==='Picked Up'?'gold':'rust');
+    return `<tr>
+      <td class="num">${e.lotNo||'—'}</td>
+      <td>${e.vendor||'—'}</td>
+      <td>${e.item||'—'}</td>
+      <td>${fmtDate(e.pickupDate)}</td>
+      <td>${fmtDate(e.deliveryDate)}</td>
+      <td class="num">${money(e.pieces)}</td>
+      <td class="num">₹ ${money(e.amount)}</td>
+      <td><span class="pill ${pillClass}">${status}</span></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8"><div class="empty-state">No Job Work entries yet.</div></td></tr>`;
+
+  return `
+    <div class="card" style="border-color:var(--teal);">
+      <div class="card-head" style="background:var(--teal-tint);">
+        <h2 style="color:var(--teal-dark);">⚙ Factory Overhead</h2>
+      </div>
+      <div class="card-body" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <label style="font-size:12.5px; font-weight:600; color:var(--ink-soft);">In-House stitching (₹/piece)</label>
+        <input type="number" id="overheadInHouseInput" value="${SETTINGS.overheadInHouse||0}" style="width:90px;">
+        <label style="font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-left:8px;">Job Work stitching (₹/piece)</label>
+        <input type="number" id="overheadJobWorkInput" value="${SETTINGS.overheadJobWork||0}" style="width:90px;">
+        <button class="btn btn-primary" id="saveOverheadBtn" style="padding:8px 16px; font-size:12.5px;">Save</button>
+        <span class="save-msg" id="overheadSaveMsg" style="font-size:12px;">Saved ✓</span>
+        <span style="font-size:11.5px; color:var(--ink-soft); flex-basis:100%;">Covers rent, electricity, and general running costs. Applied per piece based on how each lot was stitched — in-house pieces get the in-house rate, job-worked pieces get the job-work rate. Shows in every lot's Total Cost and Cost/Piece below.</span>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Total Lots</div><div class="value">${lots.length}</div></div>
+      <div class="kpi accent"><div class="label">Pieces Produced</div><div class="value">${money(totals.pieces)}</div></div>
+      <div class="kpi"><div class="label">Total Cost</div><div class="value">₹ ${money(totals.cost)}</div></div>
+      <div class="kpi gold"><div class="label">Sale Revenue</div><div class="value">₹ ${money(totals.sale)}</div></div>
+      <div class="kpi ${totals.profit>=0?'good':'bad'}"><div class="label">Profit</div><div class="value">₹ ${money(totals.profit)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Cutting by Factory</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Factory</th><th class="num">Lots</th><th class="num">Pieces Cut</th><th class="num">Meters Used</th><th class="num">Cutting Cost</th></tr></thead>
+            <tbody>${factoryRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>Lot-by-lot costing</h2>
+        <div class="filter-bar">
+          <input type="text" id="lotSearchBox" placeholder="Search by Lot No or Item…" style="width:220px;">
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th class="num">Lot</th><th>Date</th><th>Factory</th><th>Item</th><th class="num">Pieces</th>
+              <th class="num">Avg m/pc</th><th class="num">Wastage</th><th class="num">Net Avg m/pc</th><th class="num">Overhead</th><th class="num">Total Cost</th><th class="num">Cost/Piece</th><th>Stitching</th>
+              <th class="num">Delivered</th><th class="num">In Stock</th><th class="num">Sale Amt</th>
+              <th class="num">Profit</th><th>Delivered To</th>
+            </tr></thead>
+            <tbody id="lotCostingBody">${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Job Work \u2014 pickup &amp; delivery tracker</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th class="num">Lot</th><th>Vendor</th><th>Item</th><th>Pickup Date</th><th>Delivery Date</th><th class="num">Pieces</th><th class="num">Amount</th><th>Status</th></tr></thead>
+            <tbody>${jwRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindLots(){
+  const btn = document.getElementById('saveOverheadBtn');
+  if(btn){
+    btn.addEventListener('click', async ()=>{
+      const inHouseInput = document.getElementById('overheadInHouseInput');
+      const jobWorkInput = document.getElementById('overheadJobWorkInput');
+      const msg = document.getElementById('overheadSaveMsg');
+      const ok = await saveSettings(inHouseInput.value, jobWorkInput.value);
+      if(ok){
+        msg.textContent = 'Saved ✓'; msg.style.color = 'var(--green)'; msg.classList.add('show');
+      }else{
+        msg.textContent = 'Save failed'; msg.style.color = 'var(--rust)'; msg.classList.add('show');
+      }
+      setTimeout(()=>msg.classList.remove('show'), 1500);
+      render();
+    });
+  }
+  const searchBox = document.getElementById('lotSearchBox');
+  if(searchBox){
+    searchBox.addEventListener('input', ()=>{
+      const q = searchBox.value.trim().toLowerCase();
+      document.querySelectorAll('#lotCostingBody tr[data-lotno]').forEach(tr=>{
+        const match = !q || tr.dataset.lotno.includes(q) || tr.dataset.item.includes(q);
+        tr.style.display = match ? '' : 'none';
+      });
+    });
+  }
+}
+
+/* =========================================================
+   COMPUTED: FABRIC STOCK / BALANCE
+   ========================================================= */
+function computeFabricBalance(){
+  const list = entriesInFY(ENTRIES);
+  const fabrics = {};
+  function ensure(name){ if(!fabrics[name]) fabrics[name] = {name, received:0, receivedPieces:0, receivedAmt:0, used:0, lots:new Set()}; }
+  list.filter(e=>e.type==='fabricReceived' && e.fabric).forEach(e=>{
+    ensure(e.fabric);
+    fabrics[e.fabric].received += num(e.metersOpt);
+    fabrics[e.fabric].receivedPieces += num(e.fabricPieces);
+    fabrics[e.fabric].receivedAmt += num(e.amount)||0;
+  });
+  list.filter(e=>e.type==='cutting' && e.fabric).forEach(e=>{
+    ensure(e.fabric); fabrics[e.fabric].used += num(e.meters);
+    if(e.lotNo) fabrics[e.fabric].lots.add(e.lotNo);
+  });
+  return Object.values(fabrics).map(f=>({...f, balance: f.received-f.used, lotCount: f.lots.size}))
+    .sort((a,b)=> b.received-a.received);
+}
+
+function renderFabricStock(){
+  const fabrics = computeFabricBalance();
+  const totals = fabrics.reduce((a,f)=>({received:a.received+f.received, receivedPieces:a.receivedPieces+f.receivedPieces, used:a.used+f.used, balance:a.balance+f.balance}),{received:0,receivedPieces:0,used:0,balance:0});
+  const rows = fabrics.length ? fabrics.map(f=>`
+    <tr>
+      <td>${f.name}</td>
+      <td class="num">${f.received.toFixed(1)}</td>
+      <td class="num">${f.receivedPieces ? money(f.receivedPieces) : '<span class="muted">—</span>'}</td>
+      <td class="num">${f.used.toFixed(1)}</td>
+      <td class="num" style="font-weight:600; color:${f.balance<0?'var(--rust)':'var(--green)'}">${f.balance.toFixed(1)} m</td>
+      <td class="num">${f.lotCount}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="6"><div class="empty-state"><div class="stub">No fabric logged yet</div>Log a Fabric Received entry, or start Cutting \u2014 both count towards balance.</div></td></tr>`;
+
+  const receivedLog = list_fabric_received();
+  const logRows = receivedLog.length ? receivedLog.map(e=>`
+    <tr>
+      <td>${fmtDate(e.date)}</td><td>${e.party||'—'}</td><td>${e.fabric||'—'}</td>
+      <td class="num">${e.metersOpt?money(e.metersOpt):'<span class="muted">—</span>'}</td>
+      <td class="num">${e.fabricPieces?money(e.fabricPieces):'<span class="muted">—</span>'}</td>
+      <td class="num">${e.rate?money(e.rate):'—'}</td>
+      <td class="num">${e.amount?('₹ '+money(e.amount)):'—'}</td>
+    </tr>`).join('') : `<tr><td colspan="7"><div class="empty-state">No fabric received logged yet.</div></td></tr>`;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi accent"><div class="label">Total Received (m)</div><div class="value">${totals.received.toFixed(0)} m</div></div>
+      <div class="kpi gold"><div class="label">Total Received (pcs)</div><div class="value">${money(totals.receivedPieces)}</div></div>
+      <div class="kpi"><div class="label">Total Used (Cutting)</div><div class="value">${totals.used.toFixed(0)} m</div></div>
+      <div class="kpi ${totals.balance<0?'bad':'good'}"><div class="label">Balance in Stock (m)</div><div class="value">${totals.balance.toFixed(0)} m</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Fabric-by-fabric balance</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Fabric</th><th class="num">Received (m)</th><th class="num">Received (pcs)</th><th class="num">Used in Cutting (m)</th><th class="num">Balance (m)</th><th class="num">Lots Cut</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Fabric received \u2014 log</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Party</th><th>Fabric</th><th class="num">Meters</th><th class="num">Pieces</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+            <tbody>${logRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Log fabric as it arrives with <b>Fabric Received</b>. If it's bought by length, fill Meters — the balance and running total track meters. If it's bought by piece (e.g. 60 pcs \u00d7 \u20b9915), fill Pieces instead \u2014 the cost still tracks correctly, it just won't add to the meter balance since pieces and meters aren't the same unit.</footer>`;
+}
+function list_fabric_received(){
+  return entriesInFY(ENTRIES).filter(e=>e.type==='fabricReceived').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+}
+
+/* =========================================================
+   COMPUTED: STAFF SALARY & KHARCHA
+   ========================================================= */
+function computeStaffKharcha(){
+  const list = entriesInFY(ENTRIES);
+  const staff = {};
+  function ensure(name){
+    const key = normName(name);
+    if(!key) return null;
+    if(!staff[key]) staff[key] = {name: String(name).trim(), salary:0, kharcha:0};
+    return staff[key];
+  }
+  list.filter(e=>e.type==='salary' && e.person).forEach(e=>{ const s=ensure(e.person); if(s) s.salary += num(e.amount); });
+  list.filter(e=>e.type==='kharcha' && e.person).forEach(e=>{ const s=ensure(e.person); if(s) s.kharcha += num(e.amount); });
+  list.filter(e=>e.type==='openingBalance' && e.partyRole==='Staff' && e.partyName).forEach(e=>{
+    const s = ensure(e.partyName);
+    if(!s) return;
+    const amt = num(e.amount);
+    if(amt>=0) s.salary += amt; else s.kharcha += -amt;
+  });
+  return Object.values(staff).map(s=>({...s, net: s.salary-s.kharcha})).sort((a,b)=> b.salary-a.salary);
+}
+
+function renderStaff(){
+  const staff = computeStaffKharcha();
+  const totals = staff.reduce((a,s)=>({salary:a.salary+s.salary, kharcha:a.kharcha+s.kharcha, net:a.net+s.net}),{salary:0,kharcha:0,net:0});
+  const rows = staff.length ? staff.map(s=>`
+    <tr>
+      <td>${s.name}</td>
+      <td class="num">${money(s.salary)}</td>
+      <td class="num" style="color:var(--rust);">${money(s.kharcha)}</td>
+      <td class="num" style="font-weight:600; color:var(--green);">₹ ${money(s.net)}</td>
+      <td><button class="stmt-btn" data-stmt-staff="${s.name}">📄 Statement</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="5"><div class="empty-state"><div class="stub">No staff entries yet</div>Log a Salary or Kharcha / Advance entry to see people here.</div></td></tr>`;
+
+  const kharchaLog = entriesInFY(ENTRIES).filter(e=>e.type==='kharcha').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const logRows = kharchaLog.length ? kharchaLog.map(e=>`
+    <tr><td>${fmtDate(e.date)}</td><td>${e.person||'—'}</td><td class="num">₹ ${money(e.amount)}</td><td>${e.remark||'—'}</td></tr>
+  `).join('') : `<tr><td colspan="4"><div class="empty-state">No Kharcha / Advance entries yet.</div></td></tr>`;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Total Salary (logged)</div><div class="value">₹ ${money(totals.salary)}</div></div>
+      <div class="kpi bad"><div class="label">Total Kharcha</div><div class="value">₹ ${money(totals.kharcha)}</div></div>
+      <div class="kpi good"><div class="label">Net Payable</div><div class="value">₹ ${money(totals.net)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Staff \u2014 salary vs. kharcha (this year)</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Name</th><th class="num">Salary Logged</th><th class="num">Kharcha Taken</th><th class="num">Net Payable</th><th>Statement</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Kharcha / advance log</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Name</th><th class="num">Amount</th><th>Remark</th></tr></thead>
+            <tbody>${logRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Log any advance a staff member takes during the month as <b>Kharcha / Advance</b>. When you log their full <b>Salary</b> entry for that month, the form shows that month\u2019s Kharcha and the Net Payable right there \u2014 so you know exactly how much to hand over.</footer>`;
+}
+
+function bindStaff(){
+  document.querySelectorAll('[data-stmt-staff]').forEach(b=>b.addEventListener('click', ()=>{
+    openStatement('staff', b.dataset.stmtStaff);
+  }));
+}
+
+/* =========================================================
+   COMPUTED: BUYER LEDGER
+   ========================================================= */
+function computeBuyers(){
+  const list = entriesInFY(ENTRIES);
+  const buyers = {};
+  function ensure(name){
+    const key = normName(name);
+    if(!key) return null;
+    if(!buyers[key]) buyers[key] = {name: String(name).trim(), pieces:0, billed:0, received:0, profit:0};
+    return buyers[key];
+  }
+  list.filter(e=>e.type==='sale' && e.buyer).forEach(e=>{
+    const b=ensure(e.buyer); if(b){ b.pieces += num(e.pieces); b.billed += num(e.amount); }
+  });
+  list.filter(e=>e.type==='saleOther' && e.buyer).forEach(e=>{
+    const b=ensure(e.buyer); if(b){ b.pieces += num(e.pieces); b.billed += num(e.amount); }
+  });
+  list.filter(e=>e.type==='paymentReceived' && e.buyer).forEach(e=>{
+    const b=ensure(e.buyer); if(b) b.received += num(e.amount);
+  });
+  list.filter(e=>e.type==='directPayment' && e.buyer).forEach(e=>{
+    const b=ensure(e.buyer); if(b) b.received += num(e.amount);
+  });
+  list.filter(e=>e.type==='openingBalance' && e.partyRole==='Buyer' && e.partyName).forEach(e=>{
+    const b = ensure(e.partyName);
+    if(!b) return;
+    const amt = num(e.amount);
+    if(amt>=0) b.billed += amt; else b.received += -amt;
+  });
+  // profit only computable for lot-tracked sales, using lot cost/piece
+  const lots = computeLots();
+  const lotMap = {}; lots.forEach(l=>lotMap[l.lotNo]=l);
+  list.filter(e=>(e.type==='sale' || e.type==='saleOther') && e.buyer && e.lotNo).forEach(e=>{
+    const l = lotMap[e.lotNo];
+    const b = buyers[normName(e.buyer)];
+    if(l && l.pieces && b){ b.profit += num(e.amount) - (l.costPerPiece*num(e.pieces)); }
+  });
+  return Object.values(buyers).map(b=>({...b, balance: b.billed-b.received}))
+    .sort((a,b)=> b.billed - a.billed);
+}
+
+function computeBuyerDetail(){
+  const list = entriesInFY(ENTRIES);
+  const lots = computeLots();
+  const lotMap = {}; lots.forEach(l=>lotMap[l.lotNo]=l);
+  const rows = [];
+  list.filter(e=>e.type==='sale' && e.buyer).forEach(e=>{
+    const l = lotMap[e.lotNo];
+    const profit = l ? (num(e.amount) - l.costPerPiece*num(e.pieces)) : null;
+    rows.push({buyer:e.buyer, challanNo:e.saleChallanNo||'—', lotNo:e.lotNo||'—', item: (l&&l.item)?l.item:(e.itemPick||'—'), date:e.date,
+      pieces:num(e.pieces), saleAmount:num(e.amount), profit});
+  });
+  list.filter(e=>e.type==='saleOther' && e.buyer).forEach(e=>{
+    const l = lotMap[e.lotNo];
+    const profit = l ? (num(e.amount) - l.costPerPiece*num(e.pieces)) : null;
+    rows.push({buyer:e.buyer, challanNo:e.saleChallanNo||'—', lotNo:e.lotNo||'—', item: (l&&l.item)?l.item:(e.itemPick||'—'), date:e.date,
+      pieces:num(e.pieces), saleAmount:num(e.amount), profit});
+  });
+  return rows.sort((a,b)=> a.buyer.localeCompare(b.buyer) || (b.date||'').localeCompare(a.date||''));
+}
+
+function renderBuyers(){
+  const buyers = computeBuyers();
+  const detail = computeBuyerDetail();
+  const totals = buyers.reduce((a,b)=>({billed:a.billed+b.billed, received:a.received+b.received, balance:a.balance+b.balance}),{billed:0,received:0,balance:0});
+  const rows = buyers.length ? buyers.map(b=>`
+    <tr>
+      <td>${b.name}</td>
+      <td class="num">${money(b.pieces)}</td>
+      <td class="num">${money(b.billed)}</td>
+      <td class="num">${money(b.received)}</td>
+      <td class="num" style="font-weight:600; color:${b.balance>0?'var(--rust)':'var(--green)'}">₹ ${money(b.balance)}</td>
+      <td class="num">${money(b.profit)}</td>
+      <td><button class="stmt-btn" data-stmt-buyer="${b.name}">📄 Statement</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="7"><div class="empty-state"><div class="stub">No buyers yet</div>Record a Sale or Payment Received to see buyers here.</div></td></tr>`;
+
+  const buyerNames = buyers.map(b=>b.name);
+  const detailRows = detail.length ? detail.map(d=>`
+    <tr data-buyer="${d.buyer}">
+      <td>${d.buyer}</td>
+      <td>${d.challanNo}</td>
+      <td class="num">${d.lotNo}</td>
+      <td>${d.item}</td>
+      <td>${fmtDate(d.date)}</td>
+      <td class="num">${money(d.pieces)}</td>
+      <td class="num">${money(d.saleAmount)}</td>
+      <td class="num" style="color:${d.profit==null?'inherit':(d.profit>=0?'var(--green)':'var(--rust)')}">${d.profit==null?'<span class="muted">—</span>':money(d.profit)}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="8"><div class="empty-state">No sales logged yet.</div></td></tr>`;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi gold"><div class="label">Total Billed</div><div class="value">₹ ${money(totals.billed)}</div></div>
+      <div class="kpi accent"><div class="label">Total Received</div><div class="value">₹ ${money(totals.received)}</div></div>
+      <div class="kpi ${totals.balance>0?'bad':'good'}"><div class="label">Balance Due (all buyers)</div><div class="value">₹ ${money(totals.balance)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Buyer-by-buyer balance</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Buyer</th><th class="num">Pieces</th><th class="num">Total Billed</th><th class="num">Received</th><th class="num">Balance Due</th><th class="num">Profit</th><th>Statement</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <h2>What was sold \u2014 by lot &amp; item</h2>
+        <div class="filter-bar">
+          <select id="buyerDetailFilter">
+            <option value="">All buyers</option>
+            ${buyerNames.map(n=>`<option value="${n}">${n}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Buyer</th><th>Challan No</th><th class="num">Lot No</th><th>Item</th><th>Date</th><th class="num">Pieces</th><th class="num">Sale Amount</th><th class="num">Profit</th></tr></thead>
+            <tbody id="buyerDetailBody">${detailRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Payments don\u2019t need to match a specific bill — log any amount, whenever it comes in, against the buyer\u2019s name. Balance Due updates itself.</footer>`;
+}
+
+function bindBuyers(){
+  const filter = document.getElementById('buyerDetailFilter');
+  if(filter){
+    filter.addEventListener('change', ()=>{
+      document.querySelectorAll('#buyerDetailBody tr[data-buyer]').forEach(tr=>{
+        tr.style.display = (!filter.value || tr.dataset.buyer===filter.value) ? '' : 'none';
+      });
+    });
+  }
+  document.querySelectorAll('[data-stmt-buyer]').forEach(b=>b.addEventListener('click', ()=>{
+    openStatement('buyer', b.dataset.stmtBuyer);
+  }));
+}
+
+/* =========================================================
+   COMPUTED: KARIGAR / JOB-WORK LEDGER
+   ========================================================= */
+const PROD_PURPOSES = ['Job Work','Stitching','Dhaga Cutting','Pressman','Process Work'];
+
+function computeWorkers(){
+  const list = entriesInFY(ENTRIES);
+  const workers = {};
+  function ensure(name, category){
+    const key = normName(name);
+    if(!key) return null;
+    if(!workers[key]) workers[key] = {name: String(name).trim(), categories:new Set(), pieces:0, earned:0, paid:0};
+    workers[key].categories.add(category);
+    return workers[key];
+  }
+  list.filter(e=>e.type==='stitching' && e.karigar).forEach(e=>{
+    const w=ensure(e.karigar,'Stitching'); if(w){ w.pieces+=num(e.pieces); w.earned+=num(e.amount); }
+  });
+  list.filter(e=>e.type==='jobwork' && e.vendor).forEach(e=>{
+    const w=ensure(e.vendor,'Job Work'); if(w){ w.pieces+=num(e.pieces); w.earned+=num(e.amount); }
+  });
+  list.filter(e=>['dhaga','pressman'].includes(e.type) && e.karigar).forEach(e=>{
+    const catName = e.type==='dhaga'?'Dhaga Cutting':'Pressman';
+    const w=ensure(e.karigar,catName); if(w){ w.pieces+=num(e.pieces); w.earned+=num(e.amount); }
+  });
+  list.filter(e=>e.type==='processwork' && e.unit).forEach(e=>{
+    const w=ensure(e.unit,'Process Work'); if(w){ w.pieces+=num(e.pieces); w.earned+=num(e.amount); }
+  });
+  list.filter(e=>e.type==='paymentGiven' && e.party2 && PROD_PURPOSES.includes(e.purpose)).forEach(e=>{
+    const w=ensure(e.party2, e.purpose); if(w) w.paid += num(e.amount);
+  });
+  list.filter(e=>e.type==='directPayment' && e.party2 && PROD_PURPOSES.includes(e.purpose)).forEach(e=>{
+    const w=ensure(e.party2, e.purpose); if(w) w.paid += num(e.amount);
+  });
+  list.filter(e=>e.type==='openingBalance' && e.partyRole==='Karigar / Job Work' && e.partyName).forEach(e=>{
+    const w = ensure(e.partyName, 'Opening Balance');
+    if(!w) return;
+    const amt = num(e.amount);
+    if(amt>=0) w.earned += amt; else w.paid += -amt;
+  });
+  return Object.values(workers).map(w=>({...w, balance:w.earned-w.paid, categories:[...w.categories].join(', ')}))
+    .sort((a,b)=> b.balance-a.balance);
+}
+
+function renderWorkers(){
+  const workers = computeWorkers();
+  const totals = workers.reduce((a,w)=>({earned:a.earned+w.earned, paid:a.paid+w.paid, balance:a.balance+w.balance}),{earned:0,paid:0,balance:0});
+  const rows = workers.length ? workers.map(w=>`
+    <tr>
+      <td>${w.name}</td>
+      <td><span class="muted" style="font-size:12px;">${w.categories}</span></td>
+      <td class="num">${money(w.pieces)}</td>
+      <td class="num">${money(w.earned)}</td>
+      <td class="num">${money(w.paid)}</td>
+      <td class="num" style="font-weight:600; color:${w.balance>0?'var(--rust)':'var(--green)'}">₹ ${money(w.balance)}</td>
+      <td><button class="stmt-btn" data-stmt-worker="${w.name}">📄 Statement</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="7"><div class="empty-state"><div class="stub">No karigars or job-work vendors yet</div>Log a Stitching, Job Work, Dhaga Cutting, or Pressman entry to see people here.</div></td></tr>`;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi gold"><div class="label">Total Earned (all karigars)</div><div class="value">₹ ${money(totals.earned)}</div></div>
+      <div class="kpi accent"><div class="label">Total Paid</div><div class="value">₹ ${money(totals.paid)}</div></div>
+      <div class="kpi ${totals.balance>0?'bad':'good'}"><div class="label">Balance Still Owed</div><div class="value">₹ ${money(totals.balance)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Name by name \u2014 earned vs. paid</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Name</th><th>Work Type</th><th class="num">Pieces</th><th class="num">Earned</th><th class="num">Paid</th><th class="num">Balance Owed</th><th>Statement</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Log each karigar\u2019s or vendor\u2019s piece-work as usual (Stitching / Job Work / Dhaga Cutting / Pressman). When you settle up \u2014 weekly or whenever \u2014 log it as a <b>Payment Given</b> with their name and the matching Purpose. Balance Owed updates itself, whatever the amount or timing.</footer>`;
+}
+
+function bindWorkers(){
+  document.querySelectorAll('[data-stmt-worker]').forEach(b=>b.addEventListener('click', ()=>{
+    openStatement('worker', b.dataset.stmtWorker);
+  }));
+}
+
+/* =========================================================
+   COMPUTED: SUPPLIER BILLS (Dhaga / Material)
+   ========================================================= */
+function computeSuppliers(){
+  const list = entriesInFY(ENTRIES);
+  const suppliers = {};
+  function ensure(name){
+    const key = normName(name);
+    if(!key) return null;
+    if(!suppliers[key]) suppliers[key] = {name: String(name).trim(), billed:0, paid:0};
+    return suppliers[key];
+  }
+  list.filter(e=>e.type==='materialBill' && e.supplier).forEach(e=>{
+    const s=ensure(e.supplier); if(s) s.billed += num(e.amount);
+  });
+  list.filter(e=>e.type==='paymentGiven' && e.purpose==='Dhaga / Material Bill' && e.party2).forEach(e=>{
+    const s=ensure(e.party2); if(s) s.paid += num(e.amount);
+  });
+  list.filter(e=>e.type==='openingBalance' && e.partyRole==='Supplier' && e.partyName).forEach(e=>{
+    const s = ensure(e.partyName);
+    if(!s) return;
+    const amt = num(e.amount);
+    if(amt>=0) s.billed += amt; else s.paid += -amt;
+  });
+  return Object.values(suppliers).map(s=>({...s, balance: s.billed-s.paid}))
+    .sort((a,b)=> b.billed-a.billed);
+}
+
+/* =========================================================
+   COMPUTED: CASH FLOW
+   ========================================================= */
+function computeCash(){
+  const list = entriesInFY(ENTRIES);
+  const received = list.filter(e=>e.type==='paymentReceived').reduce((s,e)=>s+num(e.amount),0);
+  const given = list.filter(e=>e.type==='paymentGiven').reduce((s,e)=>s+num(e.amount),0);
+  return {received, given, net: received-given};
+}
+
+function renderCash(){
+  const c = computeCash();
+  const suppliers = computeSuppliers();
+  const list = entriesInFY(ENTRIES).filter(e=>e.type==='paymentReceived'||e.type==='paymentGiven')
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  const rows = list.length ? list.map(e=>`
+    <tr>
+      <td>${fmtDate(e.date)}</td>
+      <td><span class="pill ${e.type==='paymentReceived'?'green':'rust'}">${e.type==='paymentReceived'?'Received':'Given'}</span></td>
+      <td>${e.buyer||e.party2||'—'}</td>
+      <td>${e.purpose||'—'}</td>
+      <td>${e.source||'—'}</td>
+      <td class="num" style="color:${e.type==='paymentReceived'?'var(--green)':'var(--rust)'}">${e.type==='paymentReceived'?'+':'-'}₹ ${money(e.amount)}</td>
+    </tr>`).join('') :
+    `<tr><td colspan="6"><div class="empty-state"><div class="stub">No cash entries yet</div>Log a Payment Received or Payment Given from New Entry.</div></td></tr>`;
+
+  const supplierRows = suppliers.length ? suppliers.map(s=>`
+    <tr>
+      <td>${s.name}</td>
+      <td class="num">${money(s.billed)}</td>
+      <td class="num">${money(s.paid)}</td>
+      <td class="num" style="font-weight:600; color:${s.balance>0?'var(--rust)':'var(--green)'}">₹ ${money(s.balance)}</td>
+      <td><button class="stmt-btn" data-stmt-supplier="${s.name}">📄 Statement</button></td>
+    </tr>`).join('') :
+    `<tr><td colspan="5"><div class="empty-state">No Dhaga / Material bills logged yet.</div></td></tr>`;
+
+  return `
+    <div class="kpi-row">
+      <div class="kpi good"><div class="label">Total Received</div><div class="value">₹ ${money(c.received)}</div></div>
+      <div class="kpi bad"><div class="label">Total Given</div><div class="value">₹ ${money(c.given)}</div></div>
+      <div class="kpi ${c.net>=0?'good':'bad'}"><div class="label">Net Cash Flow</div><div class="value">₹ ${money(c.net)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Cash movement</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Direction</th><th>Party</th><th>Purpose</th><th>Source</th><th class="num">Amount</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Dhaga / Material bill balances</h2></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Supplier</th><th class="num">Total Billed</th><th class="num">Paid</th><th class="num">Balance Due</th><th>Statement</th></tr></thead>
+            <tbody>${supplierRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <footer class="note">Log the monthly bill amount as a <b>Dhaga / Material Bill</b> entry. When you pay the supplier, log it as a <b>Payment Given</b> with Purpose = "Dhaga / Material Bill" and the same supplier name — the balance above updates itself, same as buyer payments.</footer>`;
+}
+
+function bindCash(){
+  document.querySelectorAll('[data-stmt-supplier]').forEach(b=>b.addEventListener('click', ()=>{
+    openStatement('supplier', b.dataset.stmtSupplier);
+  }));
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+let chartCost=null, chartTrend=null;
+function renderDashboard(){
+  const lots = computeLots();
+  const cash = computeCash();
+  const totals = lots.reduce((a,l)=>({
+    pieces:a.pieces+l.pieces, cost:a.cost+l.totalCost, sale:a.sale+l.saleAmount,
+    profit:a.profit+(l.profit||0), cutting:a.cutting+l.cuttingCost, jobwork:a.jobwork+l.jobWorkCost,
+    stitching:a.stitching+l.stitchingCost, perpiece:a.perpiece+l.perPieceCost, process:a.process+l.processCost
+  }), {pieces:0,cost:0,sale:0,profit:0,cutting:0,jobwork:0,stitching:0,perpiece:0,process:0});
+
+  const topLots = lots.slice().sort((a,b)=>b.totalCost-a.totalCost).slice(0,8);
+  const availableMonths = [...new Set(ENTRIES.map(e=>e.date&&e.date.slice(0,7)).filter(Boolean))].sort().reverse();
+
+  return `
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <select id="monthlyReportSelect" style="padding:8px 10px; font-size:12.5px;">
+        <option value="">Pick a month…</option>
+        ${availableMonths.map(m=>`<option value="${m}">${monthLabelFull(m)}</option>`).join('')}
+      </select>
+      <button class="stmt-btn" id="monthlyReportBtn" style="font-size:12.5px; padding:8px 16px;">📅 Monthly Report</button>
+      <button class="stmt-btn" id="wenzerReportBtn" style="font-size:12.5px; padding:8px 16px;">🧾 Wenzer Art Sale Report</button>
+      <button class="stmt-btn" id="fullReportBtn" style="font-size:12.5px; padding:8px 16px;">📄 Full Business Report (PDF)</button>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="label">Total Lots</div><div class="value">${lots.length}</div></div>
+      <div class="kpi accent"><div class="label">Pieces Produced</div><div class="value">${money(totals.pieces)}</div></div>
+      <div class="kpi"><div class="label">Total Cost</div><div class="value">₹ ${money(totals.cost)}</div></div>
+      <div class="kpi gold"><div class="label">Sale Revenue</div><div class="value">₹ ${money(totals.sale)}</div></div>
+      <div class="kpi ${totals.profit>=0?'good':'bad'}"><div class="label">Profit</div><div class="value">₹ ${money(totals.profit)}</div></div>
+      <div class="kpi ${cash.net>=0?'good':'bad'}"><div class="label">Net Cash Flow</div><div class="value">₹ ${money(cash.net)}</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-head"><h2>Cost breakdown</h2></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="costChart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Top lots by cost</h2></div>
+        <div class="card-body" style="padding:0;">
+          <div class="table-scroll" style="max-height:260px;">
+            <table>
+              <thead><tr><th>Lot</th><th>Item</th><th class="num">Cost</th></tr></thead>
+              <tbody>${topLots.length? topLots.map(l=>`<tr><td class="num">${l.lotNo}</td><td>${l.item||'—'}</td><td class="num">₹ ${money(l.totalCost)}</td></tr>`).join('') : `<tr><td colspan="3"><div class="empty-state">No lots yet</div></td></tr>`}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Monthly pieces &amp; cost</h2></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="trendChart"></canvas></div></div>
+    </div>
+  `;
+}
+
+function bindDashboardCharts(){
+  const reportBtn = document.getElementById('fullReportBtn');
+  if(reportBtn) reportBtn.addEventListener('click', ()=>openFullReport());
+  const monthlyBtn = document.getElementById('monthlyReportBtn');
+  const monthlySelect = document.getElementById('monthlyReportSelect');
+  if(monthlyBtn){
+    monthlyBtn.addEventListener('click', ()=>{
+      if(!monthlySelect.value){
+        monthlySelect.style.borderColor = 'var(--rust)';
+        setTimeout(()=>{ monthlySelect.style.borderColor=''; }, 1500);
+        return;
+      }
+      openFullReport(monthlySelect.value);
+    });
+  }
+  const wenzerBtn = document.getElementById('wenzerReportBtn');
+  if(wenzerBtn){
+    wenzerBtn.addEventListener('click', ()=>{
+      openWenzerArtReport(monthlySelect.value || null);
+    });
+  }
+  if(typeof Chart === 'undefined'){
+    document.querySelectorAll('.chart-wrap').forEach(el=>{
+      el.innerHTML = '<div class="empty-state" style="padding:20px;">Chart library did not load (offline?). Numbers above are still accurate.</div>';
+    });
+    return;
+  }
+  const lots = computeLots();
+  const totals = lots.reduce((a,l)=>({
+    cutting:a.cutting+l.cuttingCost, jobwork:a.jobwork+l.jobWorkCost,
+    stitching:a.stitching+l.stitchingCost, perpiece:a.perpiece+l.perPieceCost, process:a.process+l.processCost,
+    overhead:a.overhead+(l.overheadCost||0)
+  }), {cutting:0,jobwork:0,stitching:0,perpiece:0,process:0,overhead:0});
+
+  const costCtx = document.getElementById('costChart');
+  if(chartCost) chartCost.destroy();
+  chartCost = new Chart(costCtx, {
+    type:'doughnut',
+    data:{
+      labels:['Fabric/Cutting','Job Work','Stitching','Per-Piece Work','Process Work','Overhead'],
+      datasets:[{data:[totals.cutting,totals.jobwork,totals.stitching,totals.perpiece,totals.process,totals.overhead],
+        backgroundColor:['#2C6E63','#B8862E','#3F7D4E','#7A8FA6','#A6432B','#6B5B95'], borderWidth:0}]
+    },
+    options:{plugins:{legend:{position:'bottom', labels:{font:{family:"'IBM Plex Sans'"}, boxWidth:11, padding:12}}}, cutout:'60%'}
+  });
+
+  // monthly trend from cutting entries in current FY
+  const list = entriesInFY(ENTRIES).filter(e=>e.type==='cutting' && e.date);
+  const monthMap = {};
+  list.forEach(e=>{
+    const d = new Date(e.date+'T00:00:00');
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!monthMap[key]) monthMap[key]={pieces:0, cost:0, label:d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'})};
+    monthMap[key].pieces += num(e.totalPieces);
+    monthMap[key].cost += num(e.meters)*num(e.rate);
+  });
+  const keys = Object.keys(monthMap).sort();
+  const trendCtx = document.getElementById('trendChart');
+  if(chartTrend) chartTrend.destroy();
+  chartTrend = new Chart(trendCtx, {
+    data:{
+      labels: keys.map(k=>monthMap[k].label),
+      datasets:[
+        {type:'bar', label:'Pieces', data:keys.map(k=>monthMap[k].pieces), backgroundColor:'#2C6E63', yAxisID:'y'},
+        {type:'line', label:'Cost (₹)', data:keys.map(k=>monthMap[k].cost), borderColor:'#B8862E', backgroundColor:'#B8862E', yAxisID:'y1', tension:.3}
+      ]
+    },
+    options:{
+      scales:{
+        y:{position:'left', title:{display:true,text:'Pieces'}},
+        y1:{position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Cost (₹)'}}
+      },
+      plugins:{legend:{position:'bottom', labels:{font:{family:"'IBM Plex Sans'"}}}}
+    }
+  });
+}
+
+/* =========================================================
+   PARTY STATEMENT (printable, WhatsApp-shareable)
+   ========================================================= */
+function computeBuyerStatement(name){
+  const detail = computeBuyerDetail().filter(d=>sameName(d.buyer,name));
+  const payments = entriesInFY(ENTRIES).filter(e=>(e.type==='paymentReceived' || e.type==='directPayment') && sameName(e.buyer,name))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const billed = detail.reduce((s,d)=>s+d.saleAmount,0);
+  const received = payments.reduce((s,e)=>s+num(e.amount),0);
+  return {name, detail, payments, billed, received, balance: billed-received};
+}
+function computeWorkerStatement(name){
+  const list = entriesInFY(ENTRIES);
+  const work = [];
+  list.filter(e=>e.type==='stitching' && sameName(e.karigar,name)).forEach(e=>work.push({date:e.date, lotNo:e.lotNo, type:'Stitching', pieces:num(e.pieces), rate:num(e.rate), amount:num(e.amount)}));
+  list.filter(e=>e.type==='jobwork' && sameName(e.vendor,name)).forEach(e=>work.push({date:e.date, lotNo:e.lotNo, type:'Job Work', pieces:num(e.pieces), rate:num(e.rate), amount:num(e.amount)}));
+  list.filter(e=>['dhaga','pressman'].includes(e.type) && sameName(e.karigar,name)).forEach(e=>work.push({date:e.date, lotNo:e.lotNo, type:e.type==='dhaga'?'Dhaga Cutting':'Pressman', pieces:num(e.pieces), rate:num(e.rate), amount:num(e.amount)}));
+  list.filter(e=>e.type==='processwork' && sameName(e.unit,name)).forEach(e=>work.push({date:e.date, lotNo:e.lotNo, type:'Process Work', pieces:num(e.pieces), rate:num(e.rate), amount:num(e.amount)}));
+  work.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const payments = list.filter(e=>(e.type==='paymentGiven' || e.type==='directPayment') && sameName(e.party2,name) && PROD_PURPOSES.includes(e.purpose))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const earned = work.reduce((s,w)=>s+w.amount,0);
+  const paid = payments.reduce((s,e)=>s+num(e.amount),0);
+  return {name, work, payments, earned, paid, balance: earned-paid};
+}
+
+function computeStaffStatement(name){
+  const list = entriesInFY(ENTRIES);
+  const salaryLog = list.filter(e=>e.type==='salary' && sameName(e.person,name)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const kharchaLog = list.filter(e=>e.type==='kharcha' && sameName(e.person,name)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const salary = salaryLog.reduce((s,e)=>s+num(e.amount),0);
+  const kharcha = kharchaLog.reduce((s,e)=>s+num(e.amount),0);
+  return {name, salaryLog, kharchaLog, salary, kharcha, net: salary-kharcha};
+}
+function computeSupplierStatement(name){
+  const list = entriesInFY(ENTRIES);
+  const bills = list.filter(e=>e.type==='materialBill' && sameName(e.supplier,name)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const payments = list.filter(e=>e.type==='paymentGiven' && sameName(e.party2,name) && e.purpose==='Dhaga / Material Bill').sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const billed = bills.reduce((s,e)=>s+num(e.amount),0);
+  const paid = payments.reduce((s,e)=>s+num(e.amount),0);
+  return {name, bills, payments, billed, paid, balance: billed-paid};
+}
+
+function monthLabelFull(monthKey){
+  const [y,m] = monthKey.split('-');
+  const names = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  return names[parseInt(m)] + ' ' + y;
+}
+
+function computeWenzerArtReport(){
+  const list = entriesInFY(ENTRIES).filter(e=>(e.type==='sale'||e.type==='saleOther') && sameName(e.buyer,'WENZER ART'))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||'') || (a.id-b.id));
+  const lots = computeLots();
+  const lotMap = {}; lots.forEach(l=>lotMap[l.lotNo]=l);
+  let no = 0;
+  const rows = list.map(e=>{
+    no++;
+    const pieces = num(e.pieces);
+    const l = lotMap[e.lotNo];
+    const wspRate = num(e.wspPrice);
+    const wspAmount = wspRate * pieces;
+    const override = num(e.actualCostOverride);
+    const actualRate = override>0 ? override : (l ? l.costPerPiece : 0);
+    const actualAmount = actualRate * pieces;
+    const saleRate = num(e.saleRate!==undefined && e.saleRate!=='' ? e.saleRate : e.rate);
+    const saleAmount = num(e.amount);
+    const difference = saleAmount - actualAmount;
+    return {no, challanNo:e.saleChallanNo||'—', lotNo:e.lotNo||'—', date:e.date, pieces,
+      wspRate, wspAmount, actualRate, actualAmount, saleRate, saleAmount, difference};
+  });
+  const totals = rows.reduce((a,r)=>({
+    pieces:a.pieces+r.pieces, wspAmount:a.wspAmount+r.wspAmount, actualAmount:a.actualAmount+r.actualAmount,
+    saleAmount:a.saleAmount+r.saleAmount, difference:a.difference+r.difference
+  }), {pieces:0, wspAmount:0, actualAmount:0, saleAmount:0, difference:0});
+  return {rows, totals};
+}
+
+function openWenzerArtReport(monthKey){
+  MONTH_OVERRIDE = monthKey || null;
+  try{
+    const overlay = document.getElementById('statementOverlay');
+    const content = document.getElementById('statementContent');
+    const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const periodLabel = monthKey ? monthLabelFull(monthKey) : (currentFY==='All' ? 'All Years' : ('FY '+currentFY));
+    const r = computeWenzerArtReport();
+
+    let html = `<div class="stmt-head">
+        <div class="brandmark">Lot Book<span class="dot">.</span></div>
+        <div class="meta">Wenzer Art Sale Report<br>Generated ${today} — ${periodLabel}</div>
+      </div>`;
+
+    html += `<div class="stmt-title">Wenzer Art \u2014 Sale Report</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Total Pieces</div><div class="v">${money(r.totals.pieces)}</div></div>
+        <div class="item"><div class="l">Total Sale Amount</div><div class="v">₹ ${money(r.totals.saleAmount)}</div></div>
+        <div class="item balance"><div class="l">Total Difference (Profit)</div><div class="v" style="color:${r.totals.difference>=0?'var(--green)':'var(--rust)'};">₹ ${money(r.totals.difference)}</div></div>
+      </div>
+      <table class="stmt-table">
+        <thead><tr>
+          <th class="num">No.</th><th>Challan No</th><th class="num">Lot No.</th><th>Date</th><th class="num">Pieces</th>
+          <th class="num">Rate</th><th class="num">Amount</th><th class="num">Actual</th><th class="num">Actual Amount</th>
+          <th class="num">Sale Rate</th><th class="num">Sale Amount</th><th class="num">Difference</th>
+        </tr></thead>
+        <tbody>${r.rows.length ? r.rows.map(row=>`
+          <tr>
+            <td class="num">${row.no}</td>
+            <td>${row.challanNo}</td>
+            <td class="num">${row.lotNo}</td>
+            <td>${fmtDate(row.date)}</td>
+            <td class="num">${money(row.pieces)}</td>
+            <td class="num">${row.wspRate?row.wspRate.toFixed(0):'—'}</td>
+            <td class="num">${row.wspAmount?'₹ '+money(row.wspAmount):'—'}</td>
+            <td class="num">${row.actualRate?row.actualRate.toFixed(0):'—'}</td>
+            <td class="num">₹ ${money(row.actualAmount)}</td>
+            <td class="num">${row.saleRate.toFixed(0)}</td>
+            <td class="num">₹ ${money(row.saleAmount)}</td>
+            <td class="num" style="color:${row.difference>=0?'var(--green)':'var(--rust)'};">₹ ${money(row.difference)}</td>
+          </tr>`).join('') : `<tr><td colspan="12" style="color:var(--ink-soft); font-style:italic;">No Wenzer Art sales in this period</td></tr>`}
+        </tbody>
+        ${r.rows.length ? `<tfoot><tr style="background:var(--gold-tint); font-weight:700;">
+          <td colspan="4">Total</td>
+          <td class="num">${money(r.totals.pieces)}</td>
+          <td></td>
+          <td class="num">₹ ${money(r.totals.wspAmount)}</td>
+          <td></td>
+          <td class="num">₹ ${money(r.totals.actualAmount)}</td>
+          <td></td>
+          <td class="num">₹ ${money(r.totals.saleAmount)}</td>
+          <td class="num">₹ ${money(r.totals.difference)}</td>
+        </tr></tfoot>` : ''}
+      </table>
+      <div class="stmt-foot">Actual / Actual Amount is the true production cost per piece \u2014 auto-calculated from Lot Costing by default, or your manually entered "Actual Cost Override" on that entry if you filled one in. Difference = Sale Amount \u2212 Actual Amount.</div>`;
+
+    content.innerHTML = html;
+    window.__stmtShare = `Wenzer Art Sale Report (${periodLabel})\nTotal Pieces: ${money(r.totals.pieces)}\nSale Amount: ₹${money(r.totals.saleAmount)}\nDifference: ₹${money(r.totals.difference)}`;
+    overlay.style.display = 'flex';
+  } finally {
+    MONTH_OVERRIDE = null;
+  }
+}
+
+function openFullReport(monthKey){
+  MONTH_OVERRIDE = monthKey || null;
+  try{
+    const overlay = document.getElementById('statementOverlay');
+    const content = document.getElementById('statementContent');
+    const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const periodLabel = monthKey ? monthLabelFull(monthKey) : (currentFY==='All' ? 'All Years' : ('FY '+currentFY));
+    const reportTitle = monthKey ? 'Monthly Report' : 'Full Business Report';
+
+    const lots = computeLots();
+    const cash = computeCash();
+    const buyers = computeBuyers();
+    const workers = computeWorkers();
+    const staff = computeStaffKharcha();
+    const suppliers = computeSuppliers();
+    const totals = lots.reduce((a,l)=>({
+      pieces:a.pieces+l.pieces, cost:a.cost+l.totalCost, sale:a.sale+l.saleAmount, profit:a.profit+(l.profit||0)
+    }), {pieces:0,cost:0,sale:0,profit:0});
+
+    const allSales = entriesInFY(ENTRIES).filter(e=>e.type==='sale'||e.type==='saleOther')
+      .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+
+    const sec = (title) => `<div class="stmt-section-title" style="margin-top:26px;">${title}</div>`;
+    const noRows = (n) => `<tr><td colspan="${n}" style="color:var(--ink-soft); font-style:italic;">None recorded</td></tr>`;
+
+    let html = `<div class="stmt-head">
+        <div class="brandmark">Lot Book<span class="dot">.</span></div>
+        <div class="meta">${reportTitle}<br>Generated ${today} — ${periodLabel}</div>
+      </div>`;
+
+    html += `<div class="stmt-title">Business Summary</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Total Lots</div><div class="v">${lots.length}</div></div>
+        <div class="item"><div class="l">Pieces Produced</div><div class="v">${money(totals.pieces)}</div></div>
+        <div class="item"><div class="l">Total Cost</div><div class="v">₹ ${money(totals.cost)}</div></div>
+        <div class="item"><div class="l">Sale Revenue</div><div class="v">₹ ${money(totals.sale)}</div></div>
+        <div class="item balance"><div class="l">Profit</div><div class="v" style="color:${totals.profit>=0?'var(--green)':'var(--rust)'};">₹ ${money(totals.profit)}</div></div>
+        <div class="item balance"><div class="l">Net Cash Flow</div><div class="v" style="color:${cash.net>=0?'var(--green)':'var(--rust)'};">₹ ${money(cash.net)}</div></div>
+      </div>`;
+
+    html += sec('Buyer Balances') + `
+      <table class="stmt-table"><thead><tr><th>Buyer</th><th class="num">Billed</th><th class="num">Received</th><th class="num">Balance Due</th></tr></thead>
+      <tbody>${buyers.length ? buyers.map(b=>`<tr><td>${b.name}</td><td class="num">₹ ${money(b.billed)}</td><td class="num">₹ ${money(b.received)}</td><td class="num" style="color:${b.balance>0?'var(--rust)':'var(--green)'};">₹ ${money(b.balance)}</td></tr>`).join('') : noRows(4)}</tbody></table>`;
+
+    html += sec('Karigar / Job-Work Balances') + `
+      <table class="stmt-table"><thead><tr><th>Name</th><th>Work Type</th><th class="num">Earned</th><th class="num">Paid</th><th class="num">Balance Owed</th></tr></thead>
+      <tbody>${workers.length ? workers.map(w=>`<tr><td>${w.name}</td><td>${w.categories}</td><td class="num">₹ ${money(w.earned)}</td><td class="num">₹ ${money(w.paid)}</td><td class="num" style="color:${w.balance>0?'var(--rust)':'var(--green)'};">₹ ${money(w.balance)}</td></tr>`).join('') : noRows(5)}</tbody></table>`;
+
+    html += sec('Staff Salary & Kharcha') + `
+      <table class="stmt-table"><thead><tr><th>Name</th><th class="num">Salary</th><th class="num">Kharcha</th><th class="num">Net Payable</th></tr></thead>
+      <tbody>${staff.length ? staff.map(s=>`<tr><td>${s.name}</td><td class="num">₹ ${money(s.salary)}</td><td class="num">₹ ${money(s.kharcha)}</td><td class="num">₹ ${money(s.net)}</td></tr>`).join('') : noRows(4)}</tbody></table>`;
+
+    html += sec('Dhaga / Material Supplier Balances') + `
+      <table class="stmt-table"><thead><tr><th>Supplier</th><th class="num">Billed</th><th class="num">Paid</th><th class="num">Balance Due</th></tr></thead>
+      <tbody>${suppliers.length ? suppliers.map(s=>`<tr><td>${s.name}</td><td class="num">₹ ${money(s.billed)}</td><td class="num">₹ ${money(s.paid)}</td><td class="num" style="color:${s.balance>0?'var(--rust)':'var(--green)'};">₹ ${money(s.balance)}</td></tr>`).join('') : noRows(4)}</tbody></table>`;
+
+    html += sec('Lot-by-Lot Production Summary') + `
+      <table class="stmt-table"><thead><tr><th class="num">Lot</th><th>Item</th><th class="num">Pieces</th><th class="num">Total Cost</th><th class="num">Delivered</th><th class="num">In Stock</th><th>Delivered To</th></tr></thead>
+      <tbody>${lots.length ? lots.map(l=>`<tr><td class="num">${l.lotNo}</td><td>${l.item||'—'}</td><td class="num">${money(l.pieces)}</td><td class="num">₹ ${money(l.totalCost)}</td><td class="num">${money(l.delivered)}</td><td class="num">${money(l.inStock)}</td><td>${l.deliveredTo}</td></tr>`).join('') : noRows(7)}</tbody></table>`;
+
+    html += sec('All Sales (Lot-Tracked + Other Buyers)') + `
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Challan</th><th>Buyer</th><th class="num">Lot</th><th>Item</th><th class="num">Pieces</th><th class="num">Amount</th></tr></thead>
+      <tbody>${allSales.length ? allSales.map(e=>`<tr><td>${fmtDate(e.date)}</td><td>${e.saleChallanNo||'—'}</td><td>${e.buyer||'—'}</td><td class="num">${e.lotNo||'—'}</td><td>${e.itemPick||'—'}</td><td class="num">${money(e.pieces)}</td><td class="num">₹ ${money(e.amount)}</td></tr>`).join('') : noRows(7)}</tbody></table>`;
+
+    html += `<div class="stmt-foot">This report reflects all records logged in Lot Book as of ${today}, for ${periodLabel}. Generated for internal reference.</div>`;
+
+    content.innerHTML = html;
+    window.__stmtShare = `Lot Book — ${reportTitle} (${periodLabel})\nTotal Cost: ₹${money(totals.cost)}\nSale Revenue: ₹${money(totals.sale)}\nProfit: ₹${money(totals.profit)}\nNet Cash Flow: ₹${money(cash.net)}`;
+    overlay.style.display = 'flex';
+  } finally {
+    MONTH_OVERRIDE = null;
+  }
+}
+
+function openStatement(type, name){
+  const overlay = document.getElementById('statementOverlay');
+  const content = document.getElementById('statementContent');
+  const today = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const fyLabel = currentFY==='All' ? 'All Years' : ('FY '+currentFY);
+
+  let html = `<div class="stmt-head">
+      <div class="brandmark">Lot Book<span class="dot">.</span></div>
+      <div class="meta">Statement generated ${today}<br>${fyLabel}</div>
+    </div>`;
+
+  if(type==='buyer'){
+    const s = computeBuyerStatement(name);
+    const totalPieces = s.detail.reduce((sum,d)=>sum+num(d.pieces),0);
+    html += `<div class="stmt-title">Buyer Statement</div><div class="stmt-name">${s.name}</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Total Billed</div><div class="v">₹ ${money(s.billed)}</div></div>
+        <div class="item"><div class="l">Total Received</div><div class="v">₹ ${money(s.received)}</div></div>
+        <div class="item balance"><div class="l">Balance Due</div><div class="v">₹ ${money(s.balance)}</div></div>
+      </div>
+      <div class="stmt-section-title">Goods Delivered</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Challan</th><th>Lot</th><th>Item</th><th class="num">Pieces</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.detail.length ? s.detail.map(d=>`<tr><td>${fmtDate(d.date)}</td><td>${d.challanNo}</td><td>${d.lotNo}</td><td>${d.item}</td><td class="num">${money(d.pieces)}</td><td class="num">₹ ${money(d.saleAmount)}</td></tr>`).join('') : '<tr><td colspan="6">No sales recorded.</td></tr>'}</tbody>
+      ${s.detail.length ? `<tfoot><tr style="background:var(--gold-tint); font-weight:700;"><td colspan="4">Total</td><td class="num">${money(totalPieces)}</td><td class="num">₹ ${money(s.billed)}</td></tr></tfoot>` : ''}</table>
+      <div class="stmt-section-title">Payments Received</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Source</th><th>Paid Via</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.payments.length ? s.payments.map(p=>`<tr><td>${fmtDate(p.date)}</td><td>${p.source||'—'}</td><td>${p.type==='directPayment'?('Paid direct to '+(p.party2||'labour')):'Direct to you'}</td><td class="num">₹ ${money(p.amount)}</td></tr>`).join('') : '<tr><td colspan="4">No payments recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-foot">Balance Due of ₹ ${money(s.balance)} is payable at your convenience. Thank you for your business.</div>`;
+    window.__stmtShare = `Statement for ${s.name} (${fyLabel})\nTotal Billed: ₹${money(s.billed)}\nReceived: ₹${money(s.received)}\nBalance Due: ₹${money(s.balance)}`;
+  }else if(type==='worker'){
+    const s = computeWorkerStatement(name);
+    html += `<div class="stmt-title">Karigar / Job-Work Statement</div><div class="stmt-name">${s.name}</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Total Earned</div><div class="v">₹ ${money(s.earned)}</div></div>
+        <div class="item"><div class="l">Total Paid</div><div class="v">₹ ${money(s.paid)}</div></div>
+        <div class="item balance"><div class="l">Balance Owed</div><div class="v">₹ ${money(s.balance)}</div></div>
+      </div>
+      <div class="stmt-section-title">Work Done</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Lot</th><th>Type</th><th class="num">Pieces</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.work.length ? s.work.map(w=>`<tr><td>${fmtDate(w.date)}</td><td>${w.lotNo||'—'}</td><td>${w.type}</td><td class="num">${money(w.pieces)}</td><td class="num">₹ ${w.rate.toFixed(2)}</td><td class="num">₹ ${money(w.amount)}</td></tr>`).join('') : '<tr><td colspan="6">No work recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-section-title">Payments Made</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Lot</th><th>Source</th><th>Paid By</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.payments.length ? s.payments.map(p=>`<tr><td>${fmtDate(p.date)}</td><td>${p.lotNoOpt||'<span class="muted">General</span>'}</td><td>${p.source||'—'}</td><td>${p.type==='directPayment'?('Direct from '+(p.buyer||'buyer')):'You'}</td><td class="num">₹ ${money(p.amount)}</td></tr>`).join('') : '<tr><td colspan="5">No payments recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-foot">Balance Owed of ₹ ${money(s.balance)} is due for settlement. Payments tagged with a Lot No above were settled bill-wise against that specific job; "General" payments were lump-sum against the running balance.</div>`;
+    window.__stmtShare = `Statement for ${s.name} (${fyLabel})\nEarned: ₹${money(s.earned)}\nPaid: ₹${money(s.paid)}\nBalance Owed: ₹${money(s.balance)}`;
+  }else if(type==='staff'){
+    const s = computeStaffStatement(name);
+    html += `<div class="stmt-title">Staff Salary Statement</div><div class="stmt-name">${s.name}</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Salary Logged</div><div class="v">₹ ${money(s.salary)}</div></div>
+        <div class="item"><div class="l">Kharcha Taken</div><div class="v">₹ ${money(s.kharcha)}</div></div>
+        <div class="item balance"><div class="l">Net Payable</div><div class="v" style="color:var(--green);">₹ ${money(s.net)}</div></div>
+      </div>
+      <div class="stmt-section-title">Salary Payments</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.salaryLog.length ? s.salaryLog.map(e=>`<tr><td>${fmtDate(e.date)}</td><td class="num">₹ ${money(e.amount)}</td></tr>`).join('') : '<tr><td colspan="2">No salary recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-section-title">Kharcha / Advances</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Remark</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.kharchaLog.length ? s.kharchaLog.map(e=>`<tr><td>${fmtDate(e.date)}</td><td>${e.remark||'—'}</td><td class="num">₹ ${money(e.amount)}</td></tr>`).join('') : '<tr><td colspan="3">No kharcha recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-foot">Net Payable of ₹ ${money(s.net)} reflects salary logged minus kharcha taken.</div>`;
+    window.__stmtShare = `Salary Statement for ${s.name} (${fyLabel})\nSalary: ₹${money(s.salary)}\nKharcha: ₹${money(s.kharcha)}\nNet Payable: ₹${money(s.net)}`;
+  }else if(type==='supplier'){
+    const s = computeSupplierStatement(name);
+    html += `<div class="stmt-title">Supplier Statement \u2014 Dhaga / Material</div><div class="stmt-name">${s.name}</div>
+      <div class="stmt-summary">
+        <div class="item"><div class="l">Total Billed</div><div class="v">₹ ${money(s.billed)}</div></div>
+        <div class="item"><div class="l">Total Paid</div><div class="v">₹ ${money(s.paid)}</div></div>
+        <div class="item balance"><div class="l">Balance Due</div><div class="v">₹ ${money(s.balance)}</div></div>
+      </div>
+      <div class="stmt-section-title">Bills</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.bills.length ? s.bills.map(e=>`<tr><td>${fmtDate(e.date)}</td><td class="num">₹ ${money(e.amount)}</td></tr>`).join('') : '<tr><td colspan="2">No bills recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-section-title">Payments Made</div>
+      <table class="stmt-table"><thead><tr><th>Date</th><th>Source</th><th>Remark</th><th class="num">Amount</th></tr></thead>
+      <tbody>${s.payments.length ? s.payments.map(p=>`<tr><td>${fmtDate(p.date)}</td><td>${p.source||'—'}</td><td>${p.remark||'—'}</td><td class="num">₹ ${money(p.amount)}</td></tr>`).join('') : '<tr><td colspan="4">No payments recorded.</td></tr>'}</tbody></table>
+      <div class="stmt-foot">Balance Due of ₹ ${money(s.balance)} is payable at your convenience.</div>`;
+    window.__stmtShare = `Supplier Statement for ${s.name} (${fyLabel})\nBilled: ₹${money(s.billed)}\nPaid: ₹${money(s.paid)}\nBalance Due: ₹${money(s.balance)}`;
+  }
+
+  content.innerHTML = html;
+  overlay.style.display = 'flex';
+}
+
+document.getElementById('closeStatementBtn').addEventListener('click', ()=>{
+  document.getElementById('statementOverlay').style.display = 'none';
+});
+document.getElementById('statementOverlay').addEventListener('click', (e)=>{
+  if(e.target.id==='statementOverlay') document.getElementById('statementOverlay').style.display = 'none';
+});
+document.getElementById('printStatementBtn').addEventListener('click', ()=>{ window.print(); });
+document.getElementById('waStatementBtn').addEventListener('click', ()=>{
+  const text = encodeURIComponent((window.__stmtShare||'') + '\n\n(PDF attached separately \u2014 use Print / Save as PDF first, then attach it here)');
+  window.open('https://wa.me/?text='+text, '_blank');
+});
+
+/* =========================================================
+   BACKUP: EXPORT / IMPORT
+   ========================================================= */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const payload = {app:'Lot Book', exportedAt: new Date().toISOString(), entries: ENTRIES};
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `lotbook-backup-${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const incoming = Array.isArray(payload) ? payload : payload.entries;
+    if(!Array.isArray(incoming)) throw new Error('Not a valid backup file');
+    const existingIds = new Set(ENTRIES.map(x=>x.id));
+    let added = 0, skipped = 0;
+    let maxId = ENTRIES.reduce((m,x)=>Math.max(m,x.id||0), 0);
+    incoming.forEach(entry=>{
+      if(existingIds.has(entry.id)){ skipped++; return; }
+      ENTRIES.push(entry);
+      existingIds.add(entry.id);
+      maxId = Math.max(maxId, entry.id||0);
+      added++;
+    });
+    nextId = maxId + 1;
+    await saveEntries();
+    refreshFYOptions();
+    render();
+    alert(`Import complete.\n${added} entries added.\n${skipped} already existed and were skipped.\n\nNothing was deleted or overwritten.`);
+  }catch(err){
+    alert('Could not read that file. Make sure it\'s a Lot Book backup (.json) file.');
+  }
+  e.target.value = '';
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+(async function init(){
+  await loadEntries();
+  refreshFYOptions();
+  render();
+})();
+</script>
+</body>
+</html>
