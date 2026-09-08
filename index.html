@@ -3,19 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>Lot Book — Factory Ledger</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Lot Book">
-<meta name="theme-color" content="#1F2933">
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAI7ElEQVR4nO3dXYwdZR3H8d//eZ45b7ultFi3LUQIoLC+oSCEViNoCBckxhBNMCTAhTEaE+6MGo0X3uCNhhvvuPVGTbwSDBijEeILb0FcjBQoFFtKX3C7u+dt5sw8fy/OIt2XP2nP6c6ZPf190ptm0zOTzndnnnnOvMiV8zeBaDNu0itA1cU4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yMQ4yBQmvQJriIiIlL/cGGP5C62+CsUhIlk2GAwGKLUPFUijUZ9IlBVXlThEJM/zy/fPzX1wT1EUpW0oEcmL4tXDRwaDAftYpypxeOcW253v3nP3g9/+VtZfCt6XsFBV9SFZWlq68+4Hjh47XqvVVLWE5W4XVYljKM9z1TxNs6KsOEIR0zRjE5uqVhxyljKXWM6yth2eypKJcZCpcocVwA2t/xEQVUceHDjnBFj3j1V102XRkFTk7ZAC5DHuuWz37l2XxhjXDQOc8yvt9kM/+s4Xbv9ct73iz3m4qgrnpCjig9/78cuHXms0GqpnzXcpIBJj8Z+jxwd5zsHHOlXZcygQvD956vRbx98G1m8k7/3i0vJyuy2j/pa/9vqRhX8darWam0yGCuq1GsvYqCpxAFDVJElqtdrGH3nvs8Eg+NH3/416vdVqbh4HNEaeym6iQnEAUGNUISIxxnEmI1Q1vmv0T7nIcCxGJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBJsZBpmpdz3FxcgKcdX2rACKIionfTMM4JmYYQRHRyRAViYeuXkeNIqIWUAurf50UxjEZTpBH9DPsbOITV+jVe/T6vbGISDxOrsi/j8srJ+XoogBoJlBMZi/COCbACdopds/g/gPFJ6/QuUvUOxTvXr740f36xeux3MMb78hvX3TPvO6aNQQ3gV0I4yibCLoZbr063neg2L8T/QG6GVTXPHdCFd7hY/t1fl/xxEv662d9P0fNl90H4yiVEyz38dWb4v0Him6KpR6cwMmGmzEEALoZAHzphviRvfqTx0InRT2U2gdPZcvjHNopvnJjvO/WYqmHPMK793tQzbCbxS6u2aM/uCtv1ZAXG27p2dIVLnFZFzUn6KaY36v33Fy009VTlXMRHFZ6uG5Ov3ZL0Sv3qUeMowwCFBEzNTxwsBjOYZzXNg4eZ7q4Yz4euCb2stV5kRIwjjKIoDvAgWvi9ft0xK0rUODLn4rOr78dfOswjpIEh09/KA6KEY8LTpAOcMUuvWq3pmUdXBjHlhPBIGL3jF47p1kx+kGhiJitY37fWB9yXhjHlhPBIMdVl+mOBopirM8pIj48p0lZEx6MY8sNR6Nzl4w7SyFAodi3UxNX0mw64yhJXlyYLZoVHJBOnTGeLbJGcOXNgzGOLaeKxOPwaekNMM7jx6IiOLx2Svo5B6TTQoHgcXwJZzoI481SCHD4lOh5zqGNjHFsOVUEhzNdWXhL6n70kUfwWOxh4ZiU9vUb4yiJEzx/xI1cRhHRSHDohJxYkVrg2coUiYpmDc+84Z561c3U37uu59x5h06KXz7tg/BsZfooEo9f/M0vdtBIcF6Prcsjdrbwq2f94dPl7TbAOEqjQOKx2MXP/xgGBWrhnPYfqoiKXS08+qJ74iW3o86LfaZUVLRqeOFN+enjoTfAbB1REXXzw4Qq8ogkYLaBx/7pHvmzD2W8ZWQNxlGqImJHEwtvyfd/E/56WGbrmK3DC1RRxNU/w31DPcGuFhY7+Nnj/pEnfbMGV+JoY4jXkJYtRjQTnOnKw78PT78eP3Olzu+LO1uoeQAQQV6gN8CrJ+Qfx+RPL7sTy1Ly0eT/GMcEDG9hqnk8+Yp76hV8YIe//FK9bq8O71s5tYJDJ+TkinQzNBNMqgwwjklRhQKzdQBY7uGdtjz/5uqspxMkHonHziZi5B1vF6vhhg8OiX9vRnzYzXAUMlmMY/JW73ac9G3TGzGOcb37rqc127Yo4hS8cZJxjEVEOp1uv5+Kk2EMItCoMzPNer2+3ftgHKNzTnr99K47b7/l5huzft85ARCj1hr1R3/3h+deWGg2G9v69S6MY3QikqbZF287eN+99wIZMJzCjEDy5pFjf/n7c61Wc8KrOB7GMZbhYSXP+52VJe88gCLGmR070jSdgpfGMY5xOedC8MH74TsrpZAQ/BSUAX63Qu+DcZCJcZCJcZCJcZCJcZDpYjmVdc751S9BLvBnTsdZ66aqFcemX2IB8N6POXnQ6XaXV9p5jDGO8RSEDWu1tNLOBoMNDwOcEhWKQ0Q63W6/1xe3/uYfH/zi4lKWZSNvhhtv+Pgls7ONRj1euItnvJeVdvfyfXOxyKdy/1GVOJxz3W7vjts+e/DALVnac+LW/lT6aTZ/3bV5lp7XoUEEquqcPPzQD8W5C3/NhCAfDLJ+98IesCqiMnGI9Pr9zx+8+Zvf+PpZX2KdTYqsm2UjfmfR66dbdDOQiEzlbgPViQOrh5VenqftlTPBrY1DAIX3o4/+nEipj/CcChWKA6tfYoXgffCl38FDG1QrDlWNQ9v2t3y4+tv9GrChCsWhqrVa4lwyOzPjtu2eQ4sorpEkYQr6qEocqhpCOHrs7RcXFrqd5fVjju2jiLE50zp1+r8h+O3eh1w5f9Ok12GVAIOiKEp+M8BWUIQk+O1/cluVPQeGDykIIQkVWqWRbfd9xlC1tsR0/J9OjW2/66OtwzjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjIxDjI9D9HOhkxbyeokAAAAABJRU5ErkJggg==">
-<link rel="icon" type="image/png" href="data:image/png;base64,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">
-<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiTG90IEJvb2sgLSBGYWN0b3J5IExlZGdlciIsInNob3J0X25hbWUiOiJMb3QgQm9vayIsInN0YXJ0X3VybCI6Ii4vIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzFGMjkzMyIsInRoZW1lX2NvbG9yIjoiIzFGMjkzMyIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQWdBQUFBSUFDQUlBQUFCN0drT3RBQUFKQkVsRVFWUjRuTzNkUDI5V1pSakE0ZGFVUkFKOGhzNmQrMEhjWEF3eklYSENPQkRqaXBPT0drWmwwRWxKakl0TEUxY0dQeENMQTBTRXRIM3RuL2VjNXptLzY1ckwyL3RkN3QrNVR3Y09qMDlPRHdEbytXanRBUUJZaHdBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUU5UUjJnTndqbGRuTHgvY3Y3ZjJGTnZ4MHkrL1BmdjIrN1duZ09HNEFBQ2lCQUFnU2dBQW9nUUFJRW9BQUtJRUFDQktBQUNpQkFBZ1NnQUFvZ1FBSUVvQUFLSUVBQ0JLQUFDaUJBQWdTZ0FBb2dRQUlFb0FBS0lPajA5TzE1NkJKZno5MSs5MzczNjg5aFM3ZmZQZER6LysvT3ZhVTBDQ0N3QWdTZ0FBb2dRQUlFb0FBS0lFQUNCS0FBQ2lCQUFnU2dBQW9nUUFJRW9BQUtJRUFDQktBQUNpQkFBZ1NnQUFvZ1FBSUVvQUFLSUVBQ0JLQUFDaUJBQWdTZ0FBb2dRQUlFb0FBS0lFQUNCS0FBQ2lCQUFnU2dBQW9nUUFJRW9BQUtJRUFDQktBQUNpQkFBZ1NnQUFvZ1FBSUVvQUFLSUVBQ0JLQUFDaUJBQWdTZ0FBb2dRQUlFb0FBS0lFQUNCS0FBQ2lCQUFnU2dBQW9nUUFJRW9BQUtJRUFDQktBQUNpQkFBZ1NnQUFvZ1FBSUVvQUFLSUVBQ0JLQUFDaUJBQWdTZ0FBb2dRQUlFb0FBS0lFQUNEcWFPMEJnRzE2L3ZEMTVUL3c2TVdkWlNiaElnSUEzSnFkUy8raUh4YURWUWdBY0ZOWDJ2dVhmNElTTEVrQWdHdTYrZDYvNURPVllBSCtDQXhjeHo2Mi81S2Z6NEVMQUxpcXhWYnptMS9rRk5nZkZ3QndCY3MvbURzRjlzY0ZBUHd2S3k1aXA4Q2V1QUNBM1VaNERCOWhobzBSQUdDSGNUYnZPSk5zZ3dBQWx4bHQ1NDQyejlRRUFMalFtTnQyektsbUpBREErVWJlc3lQUE5oRUJBTTR4L29ZZGY4THhDUUJBbEFBQUg1cmw0WHFXT1ljbEFNQjc1dHFxYzAwN0dnRUFpQklBNEowWkg2aG5uSGtRQWdDOE5lOG1uWGZ5ZFFrQVFKUUFBRVFKQUhCd01QOWJsTm5uWDRVQUFFUUpBRUNVQUFBYmVYK3lqVyt4SkFFQWlCSUFnQ2dCQUlnU0FLamIwcXZ6TFgyWEJRZ0FRSlFBQUVRSkFFQ1VBQUJFQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRRFVQWHB4WiswUmJzMld2c3NDQkFBZ1NnQUFvZ1FBSUVvQWdJMjhPdC9HdDFpU0FBQkVDUUJBbEFBQUJ3Znp2eitaZmY1VkNBQkFsQUFBUkFrQThOYThiMUhtblh4ZEFnQzhNK01tblhIbVFRZ0FRSlFBQU8rWjY0RjZybWxISXdEQWgyYlpxclBNT1N3QkFJZ1NBT0FjNHo5Y2p6L2grQVFBT04vSUczYmsyU1lpQU1DRnh0eXpZMDQxSXdFQUxqUGF0aDF0bnFrSkFMRERPRHQzbkVtMlFRQ0EzVWJZdkNQTXNERkhhdzhBek9ITi9uMys4UFZhdjVwYjV3SUFybUQ1WFd6Nzc0OExBTGlheFU0QnEzL2ZYQURBZGV4N085ditDM0FCQU5mMDc0Nit4V3ZBM2wrU0FBQTNkZk1TMlB1ckVBRGcxdngzaisrTWdhVy9PZ0VBOXNKK0g1OC9BZ05FQ1FCQWxBQUFSQWtBUUpRQUFFUUpBRUNVQUFCRUNRQkFsQUFBUkFrQVFKUUFBRVFKQUVDVUFBQkVDUUJBbEFBQVJBa0FRSlQvRUFiRzh0bW5uM3o5NWVmWCs3ZGZmUFhzanovUGJuY2VOc3dGQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVVkckR3RHZlZnJrOGRNbmo5ZWVBaEpjQUFCUkxvQVJ2VHA3K2VEK3ZiV25BRGJPQlFBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQjFlSHh5dXZZTUFLekFCUUFRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUkFnQVFKUUFBVVFJQUVDVUFBRkVDQUJBbEFBQlJBZ0FRSlFBQVVRSUFFQ1VBQUZFQ0FCQWxBQUJSQWdBUUpRQUFVUUlBRUNVQUFGRUNBQkFsQUFCUi93RE1HcWVrd2ZlZ25BQUFBQUJKUlU1RXJrSmdnZz09Iiwic2l6ZXMiOiI1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3BuZyJ9XX0=">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink:#1F2933; --ink-soft:#4B5A63; --paper:#F7F4EE; --paper-2:#FFFFFF;
@@ -308,46 +299,11 @@
     .kpi-row{grid-template-columns:1fr 1fr;}
     .kpi .value{font-size:18px;}
   }
-
-  /* ---------- Auth screen ---------- */
-  .auth-screen{
-    min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--ink); padding:20px;
-  }
-  .auth-card{
-    background:#fff; border-radius:12px; padding:34px 32px; width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.35);
-  }
-  .auth-brand{font-family:'IBM Plex Serif',serif; font-weight:700; font-size:24px; color:var(--ink); text-align:center;}
-  .auth-brand .dot{color:var(--gold);}
-  .auth-sub{font-size:12.5px; color:var(--ink-soft); text-align:center; margin-bottom:26px;}
-  .auth-note{font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:14px; line-height:1.5;}
-  .auth-error{
-    background:var(--rust-tint); color:var(--rust); font-size:12.5px; font-weight:600; padding:9px 12px;
-    border-radius:7px; margin-bottom:14px;
-  }
 </style>
 </head>
 <body>
 
-<div id="authScreen" class="auth-screen">
-  <div class="auth-card">
-    <div class="auth-brand">Lot Book<span class="dot">.</span></div>
-    <div class="auth-sub">Factory Ledger — sign in to your workspace</div>
-    <div id="authError" class="auth-error" style="display:none;"></div>
-    <div class="field" style="margin-bottom:12px;">
-      <label>Email</label>
-      <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
-    </div>
-    <div class="field" style="margin-bottom:16px;">
-      <label>Password</label>
-      <input id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
-    </div>
-    <button id="loginBtn" class="btn btn-primary" style="width:100%; margin-bottom:8px;">Log In</button>
-    <button id="signupBtn" class="btn btn-ghost" style="width:100%;">Create Account</button>
-    <div class="auth-note">First time here? Click "Create Account" once — after that, always use "Log In".</div>
-  </div>
-</div>
-
-<div class="shell" id="appShell" style="display:none;">
+<div class="shell">
   <nav class="sidebar">
     <div class="brand">
       <div class="mark">Lot Book<span class="dot">.</span></div>
@@ -366,10 +322,9 @@
       <li><button data-tab="dashboard"><span class="n">10</span> Dashboard</button></li>
     </ul>
     <div class="sidebar-foot">
-      <span class="save-note" id="userEmailNote">Signed in</span>
+      <span class="save-note">Data saves automatically here in Claude.</span>
       <button id="exportBtn" class="backup-btn">⬇ Export Backup</button>
       <button id="importBtn" class="backup-btn">⬆ Import Backup</button>
-      <button id="logoutBtn" class="backup-btn">⏻ Log Out</button>
       <input type="file" id="importFile" accept=".json" style="display:none;">
     </div>
   </nav>
@@ -406,67 +361,39 @@
 /* =========================================================
    STORAGE
    ========================================================= */
-/* =========================================================
-   SUPABASE CONFIG — fill these in from your Supabase project
-   Project Settings → API → Project URL / anon public key
-   ========================================================= */
-const SUPABASE_URL = 'https://iqulnasrtjnrcojbkaiz.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxdWxuYXNydGpucmNvamJrYWl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDEzNzgsImV4cCI6MjEwMjExNzM3OH0.MLbemRKkx5v4qIaBFDjKw7gd4F1jrcjOtXZ48_Uo7VI';
-
-const CONFIGURED = SUPABASE_URL.startsWith('http') && SUPABASE_ANON_KEY.length > 20;
-const sb = CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
 let ENTRIES = [];
-let currentUser = null;
-let SETTINGS = {overheadInHouse: 60, overheadJobWork: 30, id: null};
+let nextId = 1;
+let SETTINGS = {overheadInHouse: 60, overheadJobWork: 30};
 
 async function loadEntries(){
-  if(!sb || !currentUser){ ENTRIES = []; return; }
   try{
-    const {data, error} = await sb.from('entries').select('id, payload').order('id', {ascending:true});
-    if(error) throw error;
-    ENTRIES = (data||[]).map(r => ({...r.payload, id:r.id}));
-    const sIdx = ENTRIES.findIndex(e=>e.type==='_settings');
-    if(sIdx>=0){
-      const s = ENTRIES[sIdx];
-      SETTINGS.overheadInHouse = s.overheadInHouse!==undefined ? num(s.overheadInHouse) : num(s.overheadPerPiece||60);
-      SETTINGS.overheadJobWork = s.overheadJobWork!==undefined ? num(s.overheadJobWork) : 30;
-      SETTINGS.id = s.id;
-      ENTRIES.splice(sIdx,1);
-    }else{
-      SETTINGS = {overheadInHouse: 60, overheadJobWork: 30, id: null};
+    const res = await window.storage.get('entries', false);
+    if(res && res.value){
+      ENTRIES = JSON.parse(res.value);
+      const sIdx = ENTRIES.findIndex(e=>e.type==='_settings');
+      if(sIdx>=0){
+        const s = ENTRIES[sIdx];
+        // migrate from old single-rate setting if present
+        SETTINGS.overheadInHouse = s.overheadInHouse!==undefined ? num(s.overheadInHouse) : num(s.overheadPerPiece||60);
+        SETTINGS.overheadJobWork = s.overheadJobWork!==undefined ? num(s.overheadJobWork) : 30;
+        ENTRIES.splice(sIdx,1);
+      }
+      nextId = ENTRIES.reduce((m,e)=>Math.max(m, e.id||0), 0) + 1;
     }
-  }catch(e){ console.error('load failed', e); ENTRIES = []; }
+  }catch(e){ ENTRIES = []; }
 }
-async function insertEntry(entry){
-  const {data, error} = await sb.from('entries').insert({payload:entry, user_id:currentUser.id}).select('id').single();
-  if(error) throw error;
-  entry.id = data.id;
-  return entry;
-}
-async function updateEntry(entry){
-  const {error} = await sb.from('entries').update({payload:entry}).eq('id', entry.id);
-  if(error) throw error;
-}
-async function deleteEntry(id){
-  const {error} = await sb.from('entries').delete().eq('id', id);
-  if(error) throw error;
+async function saveEntries(){
+  try{
+    await window.storage.set('entries', JSON.stringify(ENTRIES), false);
+    return true;
+  }catch(e){ console.error('save failed', e); return false; }
 }
 async function saveSettings(newInHouse, newJobWork){
-  const valIn = num(newInHouse);
-  const valJob = num(newJobWork);
-  const payload = {type:'_settings', overheadInHouse: valIn, overheadJobWork: valJob};
+  SETTINGS.overheadInHouse = num(newInHouse);
+  SETTINGS.overheadJobWork = num(newJobWork);
   try{
-    if(SETTINGS.id){
-      const {error} = await sb.from('entries').update({payload}).eq('id', SETTINGS.id);
-      if(error) throw error;
-    }else{
-      const {data, error} = await sb.from('entries').insert({payload, user_id:currentUser.id}).select('id').single();
-      if(error) throw error;
-      SETTINGS.id = data.id;
-    }
-    SETTINGS.overheadInHouse = valIn;
-    SETTINGS.overheadJobWork = valJob;
+    const toSave = [...ENTRIES, {type:'_settings', overheadInHouse: SETTINGS.overheadInHouse, overheadJobWork: SETTINGS.overheadJobWork}];
+    await window.storage.set('entries', JSON.stringify(toSave), false);
     return true;
   }catch(e){ console.error('settings save failed', e); return false; }
 }
@@ -504,6 +431,8 @@ const FIELD_META = {
   saleRate:    {label:'Transfer Rate (₹)', type:'number', req:true},
   wspPrice:    {label:'WSP Price (reference only)', type:'number', req:false, ph:'wholesale price, not used in calc'},
   actualCostOverride: {label:'Actual Cost /piece (optional \u2014 overrides auto-calculated cost)', type:'number', req:false, ph:'leave blank to auto-calculate from Lot Costing'},
+  discountType: {label:'Discount Type', type:'select', options:['\u20b9 Amount','% Percentage'], req:false},
+  discountValue: {label:'Discount Value', type:'number', req:false, ph:'leave blank for no discount'},
   source:      {label:'Payment Source', type:'select', options:['Cash','GPay','Bank Transfer','Cheque','Other']},
   purpose:     {label:'Purpose', type:'select', options:['Job Work','Stitching','Dhaga Cutting','Pressman','Process Work','Salary','Fabric / Cutting','Dhaga / Material Bill','Extra Expense','Other']},
   remark:      {label:'Remark', type:'text'},
@@ -608,8 +537,28 @@ const TYPES = {
                 </div>`;
               }},
   saleOther: {label:'Sale — other buyer', group:'Sales',
-              fields:['date','saleChallanNo','lotNo','buyer','itemPick','pieces','rate'],
-              amountFn:e=>num(e.pieces)*num(e.rate)},
+              fields:['date','saleChallanNo','lotNo','buyer','itemPick','pieces','rate','discountType','discountValue'],
+              amountFn:e=>{
+                const gross = num(e.pieces)*num(e.rate);
+                const dv = num(e.discountValue);
+                let discount = 0;
+                if(dv>0){
+                  discount = (e.discountType==='% Percentage') ? gross*dv/100 : dv;
+                }
+                return Math.max(0, gross-discount);
+              },
+              extraPanel:(data)=>{
+                const dv = num(data.discountValue);
+                if(!dv) return '';
+                const gross = num(data.pieces)*num(data.rate);
+                const discount = (data.discountType==='% Percentage') ? gross*dv/100 : dv;
+                const net = Math.max(0, gross-discount);
+                return `<div class="price-ref-panel">
+                  <div class="price-ref-box"><span class="lbl">Gross Amount</span><span class="val">₹ ${gross.toFixed(2)}</span></div>
+                  <div class="price-ref-box"><span class="lbl">Discount</span><span class="val" style="color:var(--rust);">\u2212 ₹ ${discount.toFixed(2)}</span></div>
+                  <div class="price-ref-box highlight"><span class="lbl">Net Amount</span><span class="val">₹ ${net.toFixed(2)}</span></div>
+                </div>`;
+              }},
   paymentReceived:{label:'Payment Received', group:'Payments', fields:['date','buyer','amount','source']},
   paymentGiven:{label:'Payment Given', group:'Payments',
               fields:['date','party2','purpose','lotNoOpt','amount','source']},
@@ -759,8 +708,8 @@ function render(){
   if(currentTab==='entry') bindEntryForm();
   if(currentTab==='records') bindRecords();
   if(currentTab==='ledger') bindPartyLedger();
-  if(currentTab==='buyers') bindBuyers();
   if(currentTab==='lots') bindLots();
+  if(currentTab==='buyers') bindBuyers();
   if(currentTab==='workers') bindWorkers();
   if(currentTab==='staff') bindStaff();
   if(currentTab==='cash') bindCash();
@@ -785,7 +734,7 @@ function renderEntryForm(){
     <div class="chalan">
       <div class="chalan-head">
         <div>
-          <div class="no">${editEntry ? 'EDITING ENTRY #'+editEntry.id : 'NEW ENTRY'}</div>
+          <div class="no">${editEntry ? 'EDITING ENTRY #'+editEntry.id : 'NEW ENTRY  ·  #'+String(nextId).padStart(4,'0')}</div>
           <h2>What happened?</h2>
         </div>
       </div>
@@ -905,8 +854,7 @@ function bindEntryForm(){
   document.getElementById('saveBtn').addEventListener('click', async ()=>{
     const type = typeSelect.value;
     const cfg = TYPES[type];
-    const data = {type};
-    if(editEntry) data.id = editEntry.id;
+    const data = {id: editEntry?editEntry.id:nextId, type};
     let ok = true;
     fieldsArea.querySelectorAll('[data-field]').forEach(el=>{
       data[el.dataset.field] = el.value;
@@ -924,45 +872,39 @@ function bindEntryForm(){
 
     const msg = document.getElementById('saveMsg');
     const splitSecondFabric = !editEntry && type==='cutting' && num(data.meters2)>0 && num(data.rate2)>0;
-    try{
-      if(editEntry){
-        await updateEntry(data);
-        const idx = ENTRIES.findIndex(e=>e.id===editEntry.id);
-        ENTRIES[idx] = data;
-        editingId = null;
-      }else if(splitSecondFabric){
-        const entry2 = {
-          type: 'cutting',
-          date: data.date, lotNo: data.lotNo, factoryNo: data.factoryNo,
-          fabric: data.fabric2, item: data.item, meters: data.meters2, rate: data.rate2,
-          party: data.vendor2, totalPieces: '0', cuttingWastage: data.wastage2||'',
-          size: data.size, productionMode: data.productionMode, deliveryDate: data.deliveryDate,
-          remark: '2nd fabric \u2014 linked to Lot ' + (data.lotNo||''),
-        };
-        entry2.amount = num(entry2.meters)*num(entry2.rate);
-        entry2.fy = fyOf(entry2.date);
-        delete data.fabric2; delete data.vendor2; delete data.meters2; delete data.rate2; delete data.wastage2;
-        await insertEntry(data);
-        ENTRIES.push(data);
-        await insertEntry(entry2);
-        ENTRIES.push(entry2);
-      }else{
-        await insertEntry(data);
-        ENTRIES.push(data);
-      }
-      refreshFYOptions();
-      if(!editEntry && (type==='sale' || type==='saleOther')){
-        carryOverBill = {date: data.date, saleChallanNo: data.saleChallanNo, buyer: data.buyer};
-      }
-      msg.textContent = splitSecondFabric ? 'Saved \u2713 (2 entries, one per fabric)' : 'Saved ✓';
-      msg.style.color='var(--green)'; msg.classList.add('show');
-      setTimeout(()=>msg.classList.remove('show'), 2200);
-      if(editEntry){ render(); } else { paintFields(); }
-    }catch(err){
-      console.error(err);
-      msg.textContent = 'Save failed — check your connection'; msg.style.color='var(--rust)'; msg.classList.add('show');
-      setTimeout(()=>msg.classList.remove('show'), 3000);
+
+    if(editEntry){
+      const idx = ENTRIES.findIndex(e=>e.id===editEntry.id);
+      ENTRIES[idx] = data;
+      editingId = null;
+    }else if(splitSecondFabric){
+      const entry2 = {
+        id: nextId+1, type: 'cutting',
+        date: data.date, lotNo: data.lotNo, factoryNo: data.factoryNo,
+        fabric: data.fabric2, item: data.item, meters: data.meters2, rate: data.rate2,
+        party: data.vendor2, totalPieces: '0', cuttingWastage: data.wastage2||'',
+        size: data.size, productionMode: data.productionMode, deliveryDate: data.deliveryDate,
+        remark: '2nd fabric \u2014 linked to Lot ' + (data.lotNo||''),
+      };
+      entry2.amount = num(entry2.meters)*num(entry2.rate);
+      entry2.fy = fyOf(entry2.date);
+      delete data.fabric2; delete data.vendor2; delete data.meters2; delete data.rate2; delete data.wastage2;
+      ENTRIES.push(data);
+      ENTRIES.push(entry2);
+      nextId += 2;
+    }else{
+      ENTRIES.push(data);
+      nextId++;
     }
+    await saveEntries();
+    refreshFYOptions();
+    if(!editEntry && (type==='sale' || type==='saleOther')){
+      carryOverBill = {date: data.date, saleChallanNo: data.saleChallanNo, buyer: data.buyer};
+    }
+    msg.textContent = splitSecondFabric ? 'Saved \u2713 (2 entries, one per fabric)' : 'Saved ✓';
+    msg.style.color='var(--green)'; msg.classList.add('show');
+    setTimeout(()=>msg.classList.remove('show'), 2200);
+    if(editEntry){ render(); } else { paintFields(); }
   });
 
   const clearBtn = document.getElementById('clearBtn');
@@ -1090,16 +1032,11 @@ function bindRecords(){
     body.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ()=>{
       if(!confirm('Delete this entry? This cannot be undone.')) return;
       const id = parseInt(b.dataset.del);
-      try{
-        await deleteEntry(id);
-        ENTRIES = ENTRIES.filter(e=>e.id!==id);
-        refreshFYOptions();
-        if(dupFilterIds) dupFilterIds.delete(id);
-        paint();
-      }catch(err){
-        console.error(err);
-        alert('Could not delete — check your connection and try again.');
-      }
+      ENTRIES = ENTRIES.filter(e=>e.id!==id);
+      await saveEntries();
+      refreshFYOptions();
+      if(dupFilterIds) dupFilterIds.delete(id);
+      paint();
     }));
   }
   search.addEventListener('input', ()=>{ dupFilterIds = null; paint(); });
@@ -2448,6 +2385,7 @@ function openFullReport(monthKey){
     MONTH_OVERRIDE = null;
   }
 }
+
 function openStatement(type, name){
   const overlay = document.getElementById('statementOverlay');
   const content = document.getElementById('statementContent');
@@ -2568,102 +2506,34 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
     const payload = JSON.parse(text);
     const incoming = Array.isArray(payload) ? payload : payload.entries;
     if(!Array.isArray(incoming)) throw new Error('Not a valid backup file');
-    let added = 0, failed = 0;
-    for(const entry of incoming){
-      const clean = {...entry};
-      delete clean.id; // the database assigns a fresh id — avoids clashing with existing records
-      try{
-        await insertEntry(clean);
-        ENTRIES.push(clean);
-        added++;
-      }catch(err){ failed++; console.error(err); }
-    }
+    const existingIds = new Set(ENTRIES.map(x=>x.id));
+    let added = 0, skipped = 0;
+    let maxId = ENTRIES.reduce((m,x)=>Math.max(m,x.id||0), 0);
+    incoming.forEach(entry=>{
+      if(existingIds.has(entry.id)){ skipped++; return; }
+      ENTRIES.push(entry);
+      existingIds.add(entry.id);
+      maxId = Math.max(maxId, entry.id||0);
+      added++;
+    });
+    nextId = maxId + 1;
+    await saveEntries();
     refreshFYOptions();
     render();
-    alert(`Import complete.\n${added} entries added.${failed?('\n'+failed+' failed to import — check your connection.'):''}\n\nThis adds to your existing data — nothing was deleted or overwritten. Avoid importing the same backup file twice, since each import creates fresh entries.`);
+    alert(`Import complete.\n${added} entries added.\n${skipped} already existed and were skipped.\n\nNothing was deleted or overwritten.`);
   }catch(err){
-    console.error(err);
     alert('Could not read that file. Make sure it\'s a Lot Book backup (.json) file.');
   }
   e.target.value = '';
 });
 
 /* =========================================================
-   AUTH
-   ========================================================= */
-function showAuthError(msg){
-  const el = document.getElementById('authError');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-function clearAuthError(){
-  document.getElementById('authError').style.display = 'none';
-}
-
-async function startApp(user){
-  currentUser = user;
-  document.getElementById('authScreen').style.display = 'none';
-  document.getElementById('appShell').style.display = 'flex';
-  const note = document.getElementById('userEmailNote');
-  if(note) note.textContent = user.email || 'Signed in';
-  await loadEntries();
-  refreshFYOptions();
-  render();
-}
-
-function showAuthScreen(){
-  currentUser = null;
-  document.getElementById('appShell').style.display = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
-}
-
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  clearAuthError();
-  if(!sb){ showAuthError('App is not configured yet — set SUPABASE_URL and SUPABASE_ANON_KEY in the code.'); return; }
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  if(!email || !password){ showAuthError('Enter your email and password.'); return; }
-  const {data, error} = await sb.auth.signInWithPassword({email, password});
-  if(error){ showAuthError(error.message); return; }
-  await startApp(data.user);
-});
-
-document.getElementById('signupBtn').addEventListener('click', async ()=>{
-  clearAuthError();
-  if(!sb){ showAuthError('App is not configured yet — set SUPABASE_URL and SUPABASE_ANON_KEY in the code.'); return; }
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  if(!email || !password){ showAuthError('Enter an email and a password (6+ characters).'); return; }
-  if(password.length < 6){ showAuthError('Password must be at least 6 characters.'); return; }
-  const {data, error} = await sb.auth.signUp({email, password});
-  if(error){ showAuthError(error.message); return; }
-  if(data.session){
-    await startApp(data.user);
-  }else{
-    showAuthError('Account created. Check your email to confirm, then log in.');
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  if(sb) await sb.auth.signOut();
-  showAuthScreen();
-});
-
-/* =========================================================
    INIT
    ========================================================= */
 (async function init(){
-  if(!sb){
-    showAuthError('App is not configured yet — open the file, find SUPABASE_URL / SUPABASE_ANON_KEY near the top of the script, and fill them in from your Supabase project.');
-    return;
-  }
-  const {data:{session}} = await sb.auth.getSession();
-  if(session && session.user){
-    await startApp(session.user);
-  }
-  sb.auth.onAuthStateChange((event, session)=>{
-    if(event === 'SIGNED_OUT'){ showAuthScreen(); }
-  });
+  await loadEntries();
+  refreshFYOptions();
+  render();
 })();
 </script>
 </body>
